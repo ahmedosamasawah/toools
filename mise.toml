@@ -1,0 +1,10 @@
+[tools]
+node = '22'
+pnpm = '9'
+
+[tasks.build]
+run = 'pnpm install && pnpm build'
+
+[tasks.deploy]
+depends = ['build']
+run = 'scp -C dist/index.html $DEPLOY_HOST:/srv/apps/toolsapp'
