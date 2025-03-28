@@ -1,27 +1,25 @@
-import {getApiKey} from './api-keys.js'
+import {get} from 'svelte/store'
+
+import {custom_prompts} from '../stores/prompts.js'
+import {get_api_key} from './api-keys.js'
 
 /**
- * إرسال طلب إلى واجهة Gemini
- * @param {string} prompt - النص التوجيهي المراد إرساله
- * @param {string} text - النص المراد معالجته
- * @returns {Promise<string>} - الرد من Gemini
+ * @param {string} prompt
+ * @param {string} text
+ * @returns {Promise<string>}
  */
-export async function processWithGemini(prompt, text) {
-    // جلب مفتاح API
-    const apiKey = await getApiKey('gemini')
-    if (!apiKey) throw new Error('الرجاء إدخال مفتاح API للمتابعة')
+export async function process_with_gemini(prompt, text) {
+    const api_key = await get_api_key('gemini')
+    if (!api_key) throw new Error('الرجاء إدخال مفتاح API للمتابعة')
 
-    // التحقق من صحة المفتاح - مفاتيح Gemini تبدأ دائماً بـ AIza
-    if (!apiKey.match(/^AIza[0-9A-Za-z-_]{35}$/)) {
+    if (!api_key.match(/^AIza[0-9A-Za-z-_]{35}$/))
         throw new Error('مفتاح API غير صالح. الرجاء التأكد من إدخال مفتاح Gemini AI صحيح')
-    }
 
-    // تجهيز النص الكامل للمعالجة
-    const fullPrompt = `${prompt}\n\nالنص المراد معالجته:\n${text}`
+    const full_prompt = `${prompt}\n\nالنص المراد معالجته:\n${text}`
 
     try {
         const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${api_key}`,
             {
                 method: 'POST',
                 headers: {
@@ -32,7 +30,7 @@ export async function processWithGemini(prompt, text) {
                         {
                             parts: [
                                 {
-                                    text: fullPrompt,
+                                    text: full_prompt,
                                 },
                             ],
                         },
@@ -42,31 +40,28 @@ export async function processWithGemini(prompt, text) {
         )
 
         if (!response.ok) {
-            const errorData = await response.json()
-            const errorMessage =
-                errorData?.error?.message || 'حدث خطأ غير معروف أثناء الاتصال بخدمة Gemini'
+            const error_data = await response.json()
+            const error_message =
+                error_data?.error?.message || 'حدث خطأ غير معروف أثناء الاتصال بخدمة Gemini'
 
             if (
-                errorMessage.includes('API key not valid') ||
-                errorData?.error?.status === 'INVALID_ARGUMENT'
-            ) {
+                error_message.includes('API key not valid') ||
+                error_data?.error?.status === 'INVALID_ARGUMENT'
+            )
                 throw new Error(
                     'مفتاح API غير صالح أو غير نشط. الرجاء الحصول على مفتاح جديد من Google AI Studio',
                 )
-            }
 
-            if (errorData?.error?.status === 'PERMISSION_DENIED') {
+            if (error_data?.error?.status === 'PERMISSION_DENIED')
                 throw new Error('تم رفض الوصول. يجب تفعيل API الخاص بك لاستخدام Gemini')
-            }
 
-            throw new Error(`خطأ في خدمة Gemini: ${errorMessage}`)
+            throw new Error(`خطأ في خدمة Gemini: ${error_message}`)
         }
 
         const data = await response.json()
 
-        if (!data.candidates || data.candidates.length === 0) {
+        if (!data.candidates || data.candidates.length === 0)
             throw new Error('لم يتم استلام أي نتائج من الخدمة. الرجاء المحاولة مرة أخرى')
-        }
 
         return data.candidates[0].content.parts[0].text
     } catch (error) {
@@ -74,70 +69,116 @@ export async function processWithGemini(prompt, text) {
             error instanceof Error &&
             (error.message.startsWith('مفتاح API') ||
                 error.message.startsWith('خطأ في خدمة Gemini'))
-        ) {
+        )
             throw error
-        }
 
-        const errorMessage = error instanceof Error ? error.message : 'خطأ غير معروف'
-        throw new Error(`فشل الاتصال بخدمة Gemini: ${errorMessage}`)
+        const error_message = error instanceof Error ? error.message : 'خطأ غير معروف'
+        throw new Error(`فشل الاتصال بخدمة Gemini: ${error_message}`)
     }
 }
 
 /**
- * تنسيق النص العربي باستخدام Gemini
- * @param {string} text - النص المراد تنسيقه
- * @returns {Promise<string>} - النص بعد التنسيق
+ * @param {string} text
+ * @returns {Promise<string>}
  */
-export async function formatText(text) {
-    const prompt = `
-    قم بتنسيق هذا النص العربي وفقاً لمعايير الكتابة الصحيحة:
-    ١. تصحيح المسافات حول علامات الترقيم
-    ٢. استخدام علامات الترقيم العربية بشكل صحيح
-    ٣. تنسيق الفقرات بشكل مناسب
-    ٤. إزالة المسافات والأسطر الزائدة
-    ٥. تطبيق اتجاه النص بشكل متناسق
-    
-    أعد النص المنسق فقط، بدون أي شروحات أو نصوص إضافية.
-    `
+export async function format_text(text) {
+    const prompts = get(custom_prompts)
+    const prompt = prompts.format_text
 
-    return processWithGemini(prompt, text)
+    return process_with_gemini(prompt, text)
 }
 
 /**
- * إضافة التشكيل للنص العربي باستخدام Gemini
- * @param {string} text - النص المراد تشكيله
- * @returns {Promise<string>} - النص مع التشكيل
+ * @param {string} text
+ * @returns {Promise<string>}
  */
-export async function addDiacritics(text) {
-    const prompt = `
-    قم بإضافة التشكيل الكامل للنص العربي مع مراعاة:
-    ١. الفتحة والضمة والكسرة
-    ٢. علامات التنوين
-    ٣. السكون والشدة حيث يلزم
-    ٤. الضبط الصحيح لأواخر الكلمات
-    
-    أعد النص مع التشكيل فقط، بدون أي شروحات أو نصوص إضافية.
-    `
+export async function add_diacritics(text) {
+    const prompts = get(custom_prompts)
+    const prompt = prompts.add_diacritics
 
-    return processWithGemini(prompt, text)
+    return process_with_gemini(prompt, text)
 }
 
 /**
- * تحسين نص OCR باستخدام Gemini
- * @param {string} text - نص OCR المراد تحسينه
- * @returns {Promise<string>} - النص بعد التحسين
+ * @param {string} text
+ * @returns {Promise<string>}
  */
-export async function enhanceOcrText(text) {
-    const prompt = `
-    هذا نص مستخرج من مستند عربي باستخدام OCR. قم بتصحيح الأخطاء وإعادة التنسيق:
-    ١. تصحيح الأحرف التي تم التعرف عليها بشكل خاطئ
-    ٢. تصحيح المسافات بين الكلمات
-    ٣. إعادة ضبط علامات الترقيم
-    ٤. تنسيق هيكل الفقرات
-    ٥. الحفاظ على المعنى والأسلوب الأصلي للنص
+export async function enhance_ocr_text(text) {
+    const prompts = get(custom_prompts)
+    const prompt = prompts.enhance_ocr
+
+    return process_with_gemini(prompt, text)
+}
+
+/**
+ * @param {string} text
+ * @returns {Promise<string>}
+ */
+export async function summarize_text(text) {
+    const prompts = get(custom_prompts)
+    const prompt = prompts.summarize_text
+
+    return process_with_gemini(prompt, text)
+}
+
+/**
+ * @param {string} text
+ * @param {string} target_language
+ * @returns {Promise<string>}
+ */
+export async function translate_text(text, target_language = 'English') {
+    const prompts = get(custom_prompts)
+    let prompt = prompts.translate_text
+
+    // Replace placeholder with target language
+    prompt = prompt.replace('TARGET_LANGUAGE', target_language)
+
+    return process_with_gemini(prompt, text)
+}
+
+/**
+ * @param {string} text
+ * @returns {Promise<string>}
+ */
+export async function create_task_list(text) {
+    const prompts = get(custom_prompts)
+    const prompt = prompts.create_task_list
+
+    return process_with_gemini(prompt, text)
+}
+
+/**
+ * @param {string} text
+ * @param {Object} options
+ * @param {boolean} options.fix_layout
+ * @param {boolean} options.add_diacritics
+ * @returns {Promise<string>}
+ */
+export async function enhance_pdf_ocr_text(
+    text,
+    options = {fix_layout: true, add_diacritics: false},
+) {
+    const prompts = get(custom_prompts)
+    let prompt = prompts.enhance_ocr
+
+    // Add custom instructions based on options
+    if (options.fix_layout) {
+        prompt += `
+    ٤. إعادة بناء هيكل الفقرات بشكل صحيح
+    ٥. تحديد العناوين والفقرات الفرعية بشكل مناسب
+    `
+    }
+
+    if (options.add_diacritics) {
+        prompt += `
+    ${options.fix_layout ? '٦' : '٤'}. إضافة التشكيل المناسب للنص العربي حيث يلزم
+    `
+    }
+
+    prompt += `
     
-    أعد النص المصحح فقط، بدون أي شروحات أو نصوص إضافية.
+    أعد النص المحسن فقط، بدون أي شروحات أو نصوص إضافية.
     `
 
-    return processWithGemini(prompt, text)
+    return process_with_gemini(prompt, text)
 }

@@ -1,70 +1,81 @@
 <div class="space-y-4">
     <div class="flex items-center justify-between">
         <h3 class="text-lg font-medium">نسخ الحروف العربية</h3>
-        <Button variant="outline" size="sm" onclick={copyTranscriptionToClipboard}>
+        <Button variant="outline" size="sm" onclick={copy_transcription_to_clipboard}>
             <Icon src={Copy} class="ml-2 h-4 w-4" />
             نسخ النص
         </Button>
     </div>
 
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div class="space-y-2">
+        <div class="flex flex-col space-y-2">
             <Label for="arabic-text">النص العربي</Label>
             <Textarea
-                id="arabic-text"
-                bind:value={arabicText}
-                placeholder="أدخل النص العربي هنا..."
-                class="font-arabic min-h-32"
                 dir="rtl"
-                oninput={updateTranscription}
+                id="arabic-text"
+                bind:value={arabic_text}
+                class="font-arabic min-h-32"
+                oninput={update_transcription}
+                placeholder="أدخل النص العربي هنا..."
             />
         </div>
 
-        <div class="space-y-2">
+        <div class="flex flex-col space-y-2">
             <Label for="transcription-text">النص المنسوخ (الروماني)</Label>
             <Textarea
-                id="transcription-text"
-                bind:value={transcriptionText}
-                placeholder="سيتم عرض النص المنسوخ هنا..."
-                class="min-h-32 font-sans"
                 dir="ltr"
                 readonly
+                id="transcription-text"
+                class="min-h-32 font-sans"
+                bind:value={transcription_text}
+                placeholder="سيتم عرض النص المنسوخ هنا..."
             />
         </div>
     </div>
 
-    <Card>
-        <CardHeader>
-            <CardTitle class="text-sm">خيارات النسخ</CardTitle>
-        </CardHeader>
-        <CardContent>
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div class="flex items-center space-x-2 space-x-reverse">
-                    <Switch
-                        id="include-diacritics"
-                        checked={includeDiacritics}
-                        onCheckedChange={(/** @type {boolean} */ val) => {
-                            includeDiacritics = val
-                            updateTranscription()
-                        }}
-                    />
-                    <Label for="include-diacritics">تضمين الحركات</Label>
-                </div>
+    <Collapsible bind:open={is_open}>
+        <div class="mb-2 flex items-center space-x-2 space-x-reverse">
+            <CollapsibleTrigger
+                class="focus-visible:ring-ring border-input bg-background hover:bg-accent hover:text-accent-foreground inline-flex h-9 items-center justify-center rounded-md border px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
+            >
+                خيارات النسخ
+                <span class="mr-2 transition-transform" class:rotate-180={is_open}>
+                    <ChevronDown class="h-4 w-4" />
+                </span>
+            </CollapsibleTrigger>
+        </div>
+        <CollapsibleContent>
+            <Card>
+                <CardContent>
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div class="flex items-center space-x-2 space-x-reverse">
+                            <Switch
+                                id="include-diacritics"
+                                checked={include_diacritics}
+                                onCheckedChange={(/** @type {boolean} */ val) => {
+                                    include_diacritics = val
+                                    update_transcription()
+                                }}
+                            />
+                            <Label for="include-diacritics">تضمين الحركات</Label>
+                        </div>
 
-                <div class="flex items-center space-x-2 space-x-reverse">
-                    <Switch
-                        id="dmg-standard"
-                        checked={useDMGStandard}
-                        onCheckedChange={(/** @type {boolean} */ val) => {
-                            useDMGStandard = val
-                            updateTranscription()
-                        }}
-                    />
-                    <Label for="dmg-standard">استخدام معيار DMG</Label>
-                </div>
-            </div>
-        </CardContent>
-    </Card>
+                        <div class="flex items-center space-x-2 space-x-reverse">
+                            <Switch
+                                id="dmg-standard"
+                                checked={use_DMG_standard}
+                                onCheckedChange={(/** @type {boolean} */ val) => {
+                                    use_DMG_standard = val
+                                    update_transcription()
+                                }}
+                            />
+                            <Label for="dmg-standard">استخدام معيار DMG</Label>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        </CollapsibleContent>
+    </Collapsible>
 
     <Card>
         <CardHeader>
@@ -81,7 +92,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {#each Object.entries(transliterationMap) as [char, values]}
+                        {#each Object.entries(transliteration_map) as [char, values]}
                             <tr>
                                 <td class="font-arabic border border-gray-300 p-2 text-center"
                                     >{char}</td
@@ -109,22 +120,25 @@ import {Label} from '../lib/components/ui/label'
 import {Button} from '../lib/components/ui/button'
 import {Switch} from '../lib/components/ui/switch'
 import {Textarea} from '../lib/components/ui/textarea'
+import ChevronDown from '@lucide/svelte/icons/chevron-down'
 import {Card, CardContent, CardHeader, CardTitle} from '../lib/components/ui/card'
+import {Collapsible, CollapsibleContent, CollapsibleTrigger} from '../lib/components/ui/collapsible'
 
 /**
  * @param {string} message
+ * @param {string} [type='default']
  */
-export let showNotification = /** @type {(message: string) => void} */ (() => {})
+export let show_notification = /** @type {(message: string, type?: string) => void} */ (() => {})
 
-let arabicText = ''
-let transcriptionText = ''
-let useDMGStandard = false
-let includeDiacritics = true
-
+let is_open = false
+let arabic_text = ''
+let transcription_text = ''
+let use_DMG_standard = false
+let include_diacritics = true
 /**
  * @type {{[key: string]: {standard: string, dmg: string}}}
  */
-const transliterationMap = {
+const transliteration_map = {
     ا: {standard: 'ā', dmg: 'ā'},
     ب: {standard: 'b', dmg: 'b'},
     ت: {standard: 't', dmg: 't'},
@@ -182,21 +196,21 @@ function transliterate(text) {
 
     for (let i = 0; i < text.length; i++) {
         const char = text[i]
-        const nextChar = text[i + 1] || ''
+        const next_char = text[i + 1] || ''
 
-        if (transliterationMap[char]) {
-            const method = useDMGStandard ? 'dmg' : 'standard'
+        if (transliteration_map[char]) {
+            const method = use_DMG_standard ? 'dmg' : 'standard'
 
-            if (nextChar === 'ّ') {
-                if (transliterationMap[char]) result += transliterationMap[char][method]
+            if (next_char === 'ّ') {
+                if (transliteration_map[char]) result += transliteration_map[char][method]
 
                 continue
             }
 
-            if (!includeDiacritics && ['َ', 'ُ', 'ِ', 'ً', 'ٌ', 'ٍ', 'ّ', 'ْ'].includes(char))
+            if (!include_diacritics && ['َ', 'ُ', 'ِ', 'ً', 'ٌ', 'ٍ', 'ّ', 'ْ'].includes(char))
                 continue
 
-            result += transliterationMap[char][method]
+            result += transliteration_map[char][method]
         } else if (char === ' ' || char === '\n' || char === '\t') result += char
         else result += char
 
@@ -206,15 +220,15 @@ function transliterate(text) {
     return result
 }
 
-function updateTranscription() {
-    transcriptionText = transliterate(arabicText)
+function update_transcription() {
+    transcription_text = transliterate(arabic_text)
 }
 
-function copyTranscriptionToClipboard() {
+function copy_transcription_to_clipboard() {
     navigator.clipboard
-        .writeText(transcriptionText)
-        .then(() => showNotification('تم نسخ النص المنسوخ'))
+        .writeText(transcription_text)
+        .then(() => show_notification('تم نسخ النص المنسوخ', 'success'))
 }
 
-onMount(() => updateTranscription())
+onMount(() => update_transcription())
 </script>

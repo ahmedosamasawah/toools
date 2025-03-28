@@ -16,12 +16,12 @@
             <li>
                 <span class="font-medium">قم بزيارة Google AI Studio:</span>
                 <a
-                    href="https://makersuite.google.com/app/apikey"
+                    href="https://makersuite.google.com/app/api_key"
                     target="_blank"
                     rel="noopener noreferrer"
                     class="ml-1 text-blue-600 underline"
                 >
-                    https://makersuite.google.com/app/apikey
+                    https://makersuite.google.com/app/api_key
                 </a>
             </li>
 
@@ -63,6 +63,6 @@
 </div>
 
 <script>
+import {Info, AlertCircle} from '@lucide/svelte'
 import {Alert, AlertTitle, AlertDescription} from '$lib/components/ui/alert/index.js'
-import {Info, AlertCircle} from 'lucide-svelte'
 </script>

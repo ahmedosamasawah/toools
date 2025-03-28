@@ -1,4 +1,4 @@
-<Tabs value={currentTab} onValueChange={val => (currentTab = val)}>
+<Tabs value={current_tab} onValueChange={val => (current_tab = val)}>
     <TabsList class="mb-4 grid grid-cols-2">
         <TabsTrigger value="character-analysis">تحليل الحروف</TabsTrigger>
         <TabsTrigger value="text-normalizer">تطبيع النص</TabsTrigger>
@@ -21,7 +21,7 @@
                         {:else if char === '\n'}
                             <div class="w-full"></div>
                         {:else}
-                            <Char {char} onCopy={copyCharacter} />
+                            <Char {char} on_copy={copy_character} />
                         {/if}
                     {/each}
                 </div>
@@ -39,9 +39,9 @@
             />
 
             <div class="flex gap-2">
-                <Button variant="default" onclick={normalizeText}>تطبيع النص (NFC)</Button>
+                <Button variant="default" onclick={normalize_text}>تطبيع النص (NFC)</Button>
 
-                <Button variant="outline" onclick={() => copyCharacter(text)}>
+                <Button variant="outline" onclick={() => copy_character(text)}>
                     <Icon src={Copy} class="ml-2 h-4 w-4" />
                     نسخ النص
                 </Button>
@@ -68,7 +68,6 @@
 </Tabs>
 
 <script>
-// import {onMount} from 'svelte'
 import Char from './Char.svelte'
 import {Icon} from '@steeze-ui/svelte-icon'
 import {Copy} from '@steeze-ui/lucide-icons'
@@ -79,25 +78,26 @@ import {Tabs, TabsList, TabsTrigger, TabsContent} from '../lib/components/ui/tab
 
 /**
  * @param {string} message
+ * @param {string} [type='default']
  */
-export let showNotification = /** @type {(message: string) => void} */ (() => {})
+export let show_notification = /** @type {(message: string, type?: string) => void} */ (() => {})
 
 /** @type {string} */
 let text = 'بِسۡمِ ٱللَّهِ ٱلرَّحۡمَـٰنِ ٱلرَّحِیمِ'
 
 /** @type {string | undefined} */
-let currentTab = 'character-analysis'
+let current_tab = 'character-analysis'
 
 /**
  * @param {string} char
  */
-function copyCharacter(char) {
-    navigator.clipboard.writeText(char).then(() => showNotification('تم نسخ الحرف'))
+function copy_character(char) {
+    navigator.clipboard.writeText(char).then(() => show_notification('تم نسخ الحرف', 'success'))
 }
 
-function normalizeText() {
+function normalize_text() {
     text = text.normalize('NFC')
-    showNotification('تم تطبيع النص')
+    show_notification('تم تطبيع النص', 'success')
 }
 
 // onMount(() => {

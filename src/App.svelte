@@ -1,95 +1,100 @@
 <div class="container mx-auto p-4 font-sans">
-    {#if notificationVisible}
+    {#if $notification.visible}
         <div
-            class="bg-primary text-primary-foreground fixed top-4 left-4 z-50 rounded-md px-4 py-2 opacity-90"
+            class="fixed top-4 left-4 z-100 rounded-md px-4 py-2 opacity-90 {get_notification_class(
+                $notification.type,
+            )}"
         >
-            {notification}
+            {$notification.message}
         </div>
     {/if}
 
-    <div class="bg-card rounded-lg p-6 shadow-md">
-        <h1 class="text-card-foreground mb-6 text-center text-sm font-semibold">أدوات نصية</h1>
-        <!-- <AdvancedSettingsMenu {showNotification} /> TODO: Add advanced settings menu -->
+    <Header {show_notification} />
 
+    <div class="bg-card mt-4 rounded-lg p-6 shadow-md">
         <div class="mb-6">
             <div class="flex flex-wrap gap-1 border-b">
                 <Button
-                    variant={currentTab === 'text-cleaner' ? 'default' : 'ghost'}
-                    class="min-w-24 flex-1 shrink-0 rounded-b-none"
-                    onclick={() => (currentTab = 'text-cleaner')}
+                    onclick={() => (current_tab = 'text-cleaner')}
+                    class="min-w-24 flex-1 shrink-0 cursor-pointer rounded-b-none"
+                    variant={current_tab === 'text-cleaner' ? 'default' : 'ghost'}
                 >
                     تحسين النص
                 </Button>
                 <Button
-                    variant={currentTab === 'arabic-transcription' ? 'default' : 'ghost'}
-                    class="min-w-24 flex-1 shrink-0 rounded-b-none"
-                    onclick={() => (currentTab = 'arabic-transcription')}
+                    class="min-w-24 flex-1 shrink-0 cursor-pointer rounded-b-none"
+                    onclick={() => (current_tab = 'arabic-transcription')}
+                    variant={current_tab === 'arabic-transcription' ? 'default' : 'ghost'}
                 >
                     نسخ الحروف
                 </Button>
                 <Button
-                    variant={currentTab === 'unichar' ? 'default' : 'ghost'}
-                    class="min-w-24 flex-1 shrink-0 rounded-b-none"
-                    onclick={() => (currentTab = 'unichar')}
+                    onclick={() => (current_tab = 'unichar')}
+                    class="min-w-24 flex-1 shrink-0 cursor-pointer rounded-b-none"
+                    variant={current_tab === 'unichar' ? 'default' : 'ghost'}
                 >
                     تحليل الحروف
                 </Button>
                 <Button
-                    variant={currentTab === 'diff-viewer' ? 'default' : 'ghost'}
-                    class="min-w-24 flex-1 shrink-0 rounded-b-none"
-                    onclick={() => (currentTab = 'diff-viewer')}
+                    onclick={() => (current_tab = 'diff-viewer')}
+                    class="min-w-24 flex-1 shrink-0 cursor-pointer rounded-b-none"
+                    variant={current_tab === 'diff-viewer' ? 'default' : 'ghost'}
                 >
                     مقارنة النصوص
                 </Button>
                 <Button
-                    variant={currentTab === 'quran-fonts' ? 'default' : 'ghost'}
-                    class="min-w-24 flex-1 shrink-0 rounded-b-none"
-                    onclick={() => (currentTab = 'quran-fonts')}
+                    onclick={() => (current_tab = 'quran-fonts')}
+                    class="min-w-24 flex-1 shrink-0 cursor-pointer rounded-b-none"
+                    variant={current_tab === 'quran-fonts' ? 'default' : 'ghost'}
                 >
                     خطوط القرآن
                 </Button>
                 <Button
-                    variant={currentTab === 'text-formatting' ? 'default' : 'ghost'}
-                    class="min-w-24 flex-1 shrink-0 rounded-b-none"
-                    onclick={() => (currentTab = 'text-formatting')}
+                    class="min-w-24 flex-1 shrink-0 cursor-pointer rounded-b-none"
+                    onclick={() => (current_tab = 'text-formatting')}
+                    variant={current_tab === 'text-formatting' ? 'default' : 'ghost'}
                 >
                     معالجة النصوص
                 </Button>
                 <Button
-                    variant={currentTab === 'audio-transcription' ? 'default' : 'ghost'}
-                    class="min-w-24 flex-1 shrink-0 rounded-b-none"
-                    onclick={() => (currentTab = 'audio-transcription')}
+                    class="min-w-24 flex-1 shrink-0 cursor-pointer rounded-b-none"
+                    onclick={() => (current_tab = 'audio-transcription')}
+                    variant={current_tab === 'audio-transcription' ? 'default' : 'ghost'}
                 >
                     تحويل الصوت
+                </Button>
+                <Button
+                    onclick={() => (current_tab = 'pdf-ocr')}
+                    class="min-w-24 flex-1 shrink-0 cursor-pointer rounded-b-none"
+                    variant={current_tab === 'pdf-ocr' ? 'default' : 'ghost'}
+                >
+                    استخراج PDF
                 </Button>
             </div>
         </div>
 
-        <div class="mb-4 flex items-center justify-between">
-            <h1 class="text-card-foreground text-xl font-semibold">أدوات نصية</h1>
-            <APIKeySettingsButton />
-        </div>
-
         <div>
-            {#if currentTab === 'text-cleaner'}
-                <TextCleaner {showNotification} />
-            {:else if currentTab === 'arabic-transcription'}
-                <ArabicTranscription {showNotification} />
-            {:else if currentTab === 'unichar'}
-                <Unichar {showNotification} />
-            {:else if currentTab === 'diff-viewer'}
-                <DiffViewer {showNotification} />
-            {:else if currentTab === 'quran-fonts'}
-                <QuranFontRenderer {showNotification} />
-            {:else if currentTab === 'text-formatting'}
+            {#if current_tab === 'text-cleaner'}
+                <TextCleaner {show_notification} />
+            {:else if current_tab === 'arabic-transcription'}
+                <ArabicTranscription {show_notification} />
+            {:else if current_tab === 'unichar'}
+                <Unichar {show_notification} />
+            {:else if current_tab === 'diff-viewer'}
+                <DiffViewer />
+            {:else if current_tab === 'quran-fonts'}
+                <QuranFontRenderer {show_notification} />
+            {:else if current_tab === 'text-formatting'}
                 <TextFormatting />
-            {:else if currentTab === 'audio-transcription'}
+            {:else if current_tab === 'audio-transcription'}
                 <AudioTranscription />
+            {:else if current_tab === 'pdf-ocr'}
+                <PDFOcr />
             {/if}
         </div>
     </div>
 
-    {#if currentTab === 'text-cleaner'}
+    {#if current_tab === 'text-cleaner'}
         <div class="my-8 border-t"></div>
 
         <div class="bg-card rounded-lg p-6 shadow-md">
@@ -104,7 +109,7 @@
                                     variant="outline"
                                     size="sm"
                                     class="font-arabic hover:bg-accent min-w-8 rounded-full"
-                                    onclick={() => copyToClipboard(item)}
+                                    onclick={() => copy_to_clipboard(item)}
                                 >
                                     {item}
                                 </Button>
@@ -124,6 +129,7 @@
 <script>
 import {onMount} from 'svelte'
 
+import PDFOcr from './components/PDFOcr.svelte'
 import {Button} from './lib/components/ui/button'
 import Unichar from './components/Unichar.svelte'
 import DiffViewer from './components/DiffViewer.svelte'
@@ -131,20 +137,46 @@ import TextCleaner from './components/TextCleaner.svelte'
 import TextFormatting from './components/TextFormatting.svelte'
 import QuranFontRenderer from './components/QuranFontRenderer.svelte'
 import AudioTranscription from './components/AudioTranscription.svelte'
+import {show_notification, notification} from './lib/stores/notification'
 import ArabicTranscription from './components/ArabicTranscription.svelte'
-import APIKeySettingsButton from './components/APIKeySettingsButton.svelte'
-// import AdvancedSettingsMenu from './components/AdvancedSettingsMenu.svelte'
+import Header from './components/Header.svelte'
 
-let currentTab = 'text-cleaner'
-let notification = ''
-let notificationVisible = false
+let current_tab = 'text-cleaner'
+
+/**
+ * Get the appropriate CSS classes for the notification based on its type
+ * @param {string} type - The type of notification (default, success, error, warning, info)
+ * @returns {string} The CSS classes to apply
+ */
+function get_notification_class(type) {
+    switch (type) {
+        case 'success':
+            return 'bg-green-500 text-white'
+        case 'error':
+            return 'bg-red-500 text-white'
+        case 'warning':
+            return 'bg-yellow-500 text-white'
+        case 'info':
+            return 'bg-blue-500 text-white'
+        default:
+            return 'bg-primary text-primary-foreground'
+    }
+}
 
 const copy_items = {
-    رموز: '﷽ﷺﷻ۝۞',
-    'رموز (اعتمدت حديثًا)':
+    '\u0631\u0645\u0648\u0632': '\uFDFD\uFDFA\uFDFB\u06DD\u06DE',
+    '\u0631\u0645\u0648\u0632 (\u0627\u0639\u062A\u0645\u062F\u062A \u062D\u062F\u064A\u062B\u064B\u0627)':
         '\uFDFE\uFD4E\uFDFF\uFD40\uFD4F\uFD41\uFD42\uFD43\uFD44\uFD45\uFD47\uFD4D\uFD48\uFD49\uFD4A\uFD4C',
-    تنسيق: '﴿﴾,«»,‹›,”“,’‘,•,✽'.split(','),
-    تواريخ: [
+    '\u062A\u0646\u0633\u064A\u0642': [
+        '\uFDFF\uFDFE',
+        '\u00AB\u00BB',
+        '\u2039\u203A',
+        '\u201C\u201D',
+        '\u2018\u2019',
+        '\u2022',
+        '\u273D',
+    ],
+    '\u062A\u0648\u0627\u0631\u064A\u062E': [
         Intl.DateTimeFormat('ar-SA', {
             weekday: 'long',
             year: 'numeric',
@@ -159,19 +191,9 @@ const copy_items = {
 /**
  * @param {string} text
  */
-function copyToClipboard(text) {
+function copy_to_clipboard(text) {
     navigator.clipboard.writeText(text)
-    showNotification('تم النسخ')
-}
-
-/**
- * @param {string} message
- * @param {number} duration
- */
-function showNotification(message, duration = 2000) {
-    notification = message
-    notificationVisible = true
-    setTimeout(() => (notificationVisible = false), duration)
+    show_notification('تم النسخ', 'success')
 }
 
 onMount(() => {

@@ -73,6 +73,6 @@
 </div>
 
 <script>
-import {Info, AlertCircle} from 'lucide-svelte'
+import {Info, AlertCircle} from '@lucide/svelte'
 import {Alert, AlertTitle, AlertDescription} from '$lib/components/ui/alert/index.js'
 </script>

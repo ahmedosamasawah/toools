@@ -1,43 +1,43 @@
-<Tabs value={currentFont} onValueChange={val => (currentFont = val)}>
+<Tabs value={current_font} onValueChange={val => (current_font = val)}>
     <TabsList class="mb-4 grid grid-cols-2 gap-1">
-        {#each fontConfigs as config}
+        {#each font_configs as config}
             <TabsTrigger class="text-sm" value={config.id}>
                 {config.name}
             </TabsTrigger>
         {/each}
     </TabsList>
 
-    {#each fontConfigs as config}
+    {#each font_configs as config}
         <TabsContent value={config.id}>
             <div class="space-y-4">
                 <div class="flex flex-wrap items-end gap-4">
-                    <div class="space-y-2">
+                    <div class="flex flex-col space-y-2">
                         <Label>صفحة الخط</Label>
                         <Input
                             min="1"
                             class="w-24"
                             type="number"
                             max={config.maxPage}
-                            bind:value={fontPage}
+                            bind:value={font_page}
                         />
                     </div>
 
-                    <div class="flex-1 space-y-2">
+                    <div class="flex flex-1 flex-col space-y-2">
                         <Label>اسم الخط</Label>
-                        <div class="rounded border bg-gray-50 p-2">{fontFamily}</div>
+                        <div class="rounded border bg-gray-50 p-2">{font_family}</div>
                     </div>
 
                     <Button
                         class="w-full"
                         variant="outline"
-                        onclick={loadFont}
-                        disabled={fontLoading}
+                        onclick={load_font}
+                        disabled={font_loading}
                     >
-                        {fontLoading ? 'جاري التحميل...' : 'تحميل الخط'}
+                        {font_loading ? 'جاري التحميل...' : 'تحميل الخط'}
                     </Button>
                 </div>
 
-                <div class="space-y-2">
+                <div class="flex flex-col space-y-2">
                     <Label>النص</Label>
                     <Textarea
                         dir="rtl"
@@ -60,14 +60,14 @@
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        {#if fontError}
+                        {#if font_error}
                             <div class="p-4 text-center text-red-500">
                                 فشل تحميل الخط. يرجى التحقق من الاتصال بالإنترنت أو تجربة صفحة أخرى.
                             </div>
                         {:else}
                             <div
                                 class="flex min-h-32 items-center justify-center rounded-md border p-4 text-sm sm:text-2xl"
-                                style="font-family: '{fontFamily}', 'Kitab', sans-serif;"
+                                style="font-family: '{font_family}', 'Kitab', sans-serif;"
                             >
                                 {text}
                             </div>
@@ -96,10 +96,11 @@ import {Tabs, TabsList, TabsTrigger, TabsContent} from '../lib/components/ui/tab
 
 /**
  * @param {string} message
+ * @param {string} [type='default']
  */
-export let showNotification = /** @type {(message: string) => void} */ (() => {})
+export let show_notification = /** @type {(message: string, type?: string) => void} */ (() => {})
 
-const fontConfigs = [
+const font_configs = [
     {
         id: 'hafs-new',
         name: 'مصحف حفص',
@@ -116,45 +117,45 @@ const fontConfigs = [
     },
 ]
 
-let fontPage = 1
-let loadedFonts = new Set()
+let font_page = 1
+let loaded_fonts = new Set()
 /** @type {string | undefined} */
-let currentFont = 'hafs-new'
+let current_font = 'hafs-new'
 let text = 'بِسۡمِ ٱللَّهِ ٱلرَّحۡمَـٰنِ ٱلرَّحِیمِ'
 
-let fontError = false
-let fontLoading = false
+let font_error = false
+let font_loading = false
 
-$: fontConfig = fontConfigs.find(f => f.id === currentFont) || fontConfigs[0]
-$: formattedPage = String(fontPage).padStart(3, '0')
-$: fontFamily = `${fontConfig.prefix}${formattedPage}`
+$: font_config = font_configs.find(f => f.id === current_font) || font_configs[0]
+$: formatted_page = String(font_page).padStart(3, '0')
+$: font_family = `${font_config.prefix}${formatted_page}`
 
-async function loadFont() {
-    if (loadedFonts.has(fontFamily)) return showNotification('تم تحميل الخط بالفعل')
+async function load_font() {
+    if (loaded_fonts.has(font_family)) return show_notification('تم تحميل الخط بالفعل', 'info')
 
-    fontLoading = true
-    fontError = false
+    font_loading = true
+    font_error = false
 
     try {
         if (typeof window === 'undefined') return
-        const fontUrl = `${fontConfig.url}${fontConfig.prefix}${formattedPage}.woff2`
-        const font = new FontFace(fontFamily, `url(${fontUrl})`)
+        const font_url = `${font_config.url}${font_config.prefix}${formatted_page}.woff2`
+        const font = new FontFace(font_family, `url(${font_url})`)
         await font.load()
         document.fonts.add(font)
-        loadedFonts.add(fontFamily)
-        showNotification('تم تحميل الخط')
+        loaded_fonts.add(font_family)
+        show_notification('تم تحميل الخط', 'success')
     } catch (error) {
         console.error('Error loading font:', error)
-        fontError = true
-        showNotification(`فشل تحميل الخط: ${error}`)
+        font_error = true
+        show_notification(`فشل تحميل الخط: ${error}`, 'error')
     } finally {
-        fontLoading = false
+        font_loading = false
     }
 }
 
 function copyText() {
-    navigator.clipboard.writeText(text).then(() => showNotification('تم نسخ النص'))
+    navigator.clipboard.writeText(text).then(() => show_notification('تم نسخ النص', 'success'))
 }
 
-// onMount(() => loadFont())
+// onMount(() => load_font())
 </script>

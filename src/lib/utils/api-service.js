@@ -1,12 +1,12 @@
-import {getApiKey, hasApiKey} from './api-keys.js'
+import {getapi_key, hasapi_key} from './api-keys.js'
 
 /**
  * Check if required API keys are set for a specific service
  * @param {string} service - 'gemini' or 'openai'
  * @returns {Promise<boolean>} Whether the required key is set
  */
-export async function verifyApiKeyForService(service) {
-    const keyExists = await hasApiKey(service)
+export async function verifyapi_keyForService(service) {
+    const keyExists = await hasapi_key(service)
     return keyExists
 }
 
@@ -16,7 +16,7 @@ export async function verifyApiKeyForService(service) {
  * @returns {Promise<object>} Headers object with auth
  */
 export async function prepareAuthHeaders(service) {
-    const key = await getApiKey(service)
+    const key = await getapi_key(service)
 
     if (service === 'openai') {
         return {

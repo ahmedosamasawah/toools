@@ -10,12 +10,16 @@
 </ButtonPrimitive.Root>
 
 <script>
-import {Button as ButtonPrimitive} from 'bits-ui'
-import {buttonVariants} from './index.js'
 import {cn} from '$lib/utils.js'
+import {buttonVariants} from './index.js'
+import {Button as ButtonPrimitive} from 'bits-ui'
+
 let className = undefined
+/** @type {'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link'} */
 export let variant = 'default'
+/** @type {'default' | 'sm' | 'lg' | 'icon'} */
 export let size = 'default'
+/** @type {import('bits-ui').Builder[]} */
 export let builders = []
 export {className as class}
 </script>

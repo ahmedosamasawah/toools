@@ -1,9 +1,9 @@
-<Button variant="outline" size="sm" class="gap-1" onclick={() => (dialogOpen = true)}>
-    <Key class="h-4 w-4" />
+<Button variant="outline" size="sm" class="gap-1" onclick={() => (dialog_open = true)}>
+    <KeyRound class="h-4 w-4" />
     <span class="hidden md:inline">API Keys</span>
 </Button>
 
-<Dialog.Root bind:open={dialogOpen}>
+<Dialog.Root bind:open={dialog_open}>
     <Dialog.Content class="max-w-[90vw] sm:max-w-[500px]">
         <Dialog.Header>
             <Dialog.Title>API Keys</Dialog.Title>
@@ -26,17 +26,17 @@
                 <div class="space-y-2">
                     <div class="flex gap-2">
                         <Input
-                            type={showGeminiKey ? 'text' : 'password'}
+                            type={show_gemini_key ? 'text' : 'password'}
                             placeholder="Enter Gemini API Key"
-                            bind:value={geminiKey}
+                            bind:value={gemini_key}
                         />
                         <Button
                             size="icon"
                             type="button"
                             variant="outline"
-                            onclick={() => (showGeminiKey = !showGeminiKey)}
+                            onclick={() => (show_gemini_key = !show_gemini_key)}
                         >
-                            {#if showGeminiKey}
+                            {#if show_gemini_key}
                                 <Eye class="h-4 w-4" />
                             {:else}
                                 <EyeOff class="h-4 w-4" />
@@ -44,19 +44,19 @@
                         </Button>
                     </div>
 
-                    {#if geminiStatus}
+                    {#if gemini_status}
                         <p
-                            class={`text-xs ${geminiKeyValid ? 'text-green-600' : 'text-amber-600'}`}
+                            class={`text-xs ${gemini_key_valid ? 'text-green-600' : 'text-amber-600'}`}
                         >
-                            {geminiStatus}
+                            {gemini_status}
                         </p>
                     {/if}
                 </div>
 
                 <Button
                     class="w-full"
-                    onclick={() => saveKey('gemini', geminiKey)}
-                    disabled={!geminiKey.trim()}>حفظ مفتاح Gemini</Button
+                    onclick={() => save_key('gemini', gemini_key)}
+                    disabled={!gemini_key.trim()}>حفظ مفتاح Gemini</Button
                 >
             </TabsContent>
 
@@ -70,17 +70,17 @@
                 <div class="space-y-2">
                     <div class="flex gap-2">
                         <Input
-                            type={showOpenAIKey ? 'text' : 'password'}
+                            type={show_open_ai_key ? 'text' : 'password'}
                             placeholder="Enter OpenAI API Key"
-                            bind:value={openaiKey}
+                            bind:value={openai_key}
                         />
                         <Button
                             size="icon"
                             type="button"
                             variant="outline"
-                            onclick={() => (showOpenAIKey = !showOpenAIKey)}
+                            onclick={() => (show_open_ai_key = !show_open_ai_key)}
                         >
-                            {#if showOpenAIKey}
+                            {#if show_open_ai_key}
                                 <Eye class="h-4 w-4" />
                             {:else}
                                 <EyeOff class="h-4 w-4" />
@@ -88,25 +88,25 @@
                         </Button>
                     </div>
 
-                    {#if openaiStatus}
+                    {#if openai_status}
                         <p
-                            class={`text-xs ${openaiKeyValid ? 'text-green-600' : 'text-amber-600'}`}
+                            class={`text-xs ${openai_key_valid ? 'text-green-600' : 'text-amber-600'}`}
                         >
-                            {openaiStatus}
+                            {openai_status}
                         </p>
                     {/if}
                 </div>
 
                 <Button
                     class="w-full"
-                    onclick={() => saveKey('openai', openaiKey)}
-                    disabled={!openaiKey.trim()}>حفظ مفتاح OpenAI</Button
+                    onclick={() => save_key('openai', openai_key)}
+                    disabled={!openai_key.trim()}>حفظ مفتاح OpenAI</Button
                 >
             </TabsContent>
         </Tabs>
 
         <Dialog.Footer>
-            <Button variant="outline" class="w-full" onclick={() => (dialogOpen = false)}>
+            <Button variant="outline" class="w-full" onclick={() => (dialog_open = false)}>
                 إغلاق
             </Button>
         </Dialog.Footer>
@@ -115,95 +115,95 @@
 
 <script>
 import {onMount} from 'svelte'
-import {Key, Eye, EyeOff} from 'lucide-svelte'
+import {Eye, EyeOff, KeyRound} from '@lucide/svelte'
 import {Input} from '$lib/components/ui/input/index.js'
 import {Button} from '$lib/components/ui/button/index.js'
 import * as Dialog from '$lib/components/ui/dialog/index.js'
-import {initApiKeys, saveApiKey, hasApiKey} from '$lib/utils/api-keys.js'
+import {init_api_keys, save_api_key, has_api_key} from '$lib/utils/api-keys.js'
 import {Tabs, TabsList, TabsTrigger, TabsContent} from '$lib/components/ui/tabs/index.js'
 
 /**
- * @typedef {'gemini' | 'openai'} ApiKeyType
+ * @typedef {'gemini' | 'openai'} api_key_type
  */
 
-let geminiKey = $state('')
-let openaiKey = $state('')
-let geminiStatus = $state('')
-let openaiStatus = $state('')
-let dialogOpen = $state(false)
-let showGeminiKey = $state(false)
-let showOpenAIKey = $state(false)
-let geminiKeyValid = $state(false)
-let openaiKeyValid = $state(false)
+let gemini_key = $state('')
+let openai_key = $state('')
+let gemini_status = $state('')
+let openai_status = $state('')
+let dialog_open = $state(false)
+let show_gemini_key = $state(false)
+let show_open_ai_key = $state(false)
+let gemini_key_valid = $state(false)
+let openai_key_valid = $state(false)
 
 onMount(async () => {
-    const {geminiKey: savedGeminiKey, openaiKey: savedOpenAIKey} = await initApiKeys()
-    geminiKey = savedGeminiKey || ''
-    openaiKey = savedOpenAIKey || ''
-    await checkKeyStatus('gemini')
-    await checkKeyStatus('openai')
+    const {gemini_key: saved_gemini_key, openai_key: saved_open_ai_key} = await init_api_keys()
+    gemini_key = saved_gemini_key || ''
+    openai_key = saved_open_ai_key || ''
+    await check_key_status('gemini')
+    await check_key_status('openai')
 })
 
 /**
  * Saves the API key for the specified service
- * @param {ApiKeyType} service - The service to save the key for
+ * @param {api_key_type} service - The service to save the key for
  * @param {string} key - The API key to save
  */
-async function saveKey(service, key) {
+async function save_key(service, key) {
     if (!key?.trim()) return
 
     try {
-        const success = await saveApiKey(service, key.trim())
+        const success = await save_api_key(service, key.trim())
         if (success) {
             if (service === 'gemini') {
-                geminiStatus = 'تم حفظ مفتاح Gemini API بنجاح'
-                geminiKeyValid = true
+                gemini_status = 'تم حفظ مفتاح Gemini API بنجاح'
+                gemini_key_valid = true
             } else {
-                openaiStatus = 'تم حفظ مفتاح OpenAI API بنجاح'
-                openaiKeyValid = true
+                openai_status = 'تم حفظ مفتاح OpenAI API بنجاح'
+                openai_key_valid = true
             }
-            await checkKeyStatus(service)
+            await check_key_status(service)
         } else {
             if (service === 'gemini') {
-                geminiStatus = 'فشل في حفظ مفتاح Gemini API'
-                geminiKeyValid = false
+                gemini_status = 'فشل في حفظ مفتاح Gemini API'
+                gemini_key_valid = false
             } else {
-                openaiStatus = 'فشل في حفظ مفتاح OpenAI API'
-                openaiKeyValid = false
+                openai_status = 'فشل في حفظ مفتاح OpenAI API'
+                openai_key_valid = false
             }
         }
 
         setTimeout(() => {
-            if (service === 'gemini') geminiStatus = ''
-            else openaiStatus = ''
+            if (service === 'gemini') gemini_status = ''
+            else openai_status = ''
         }, 3000)
     } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'خطأ غير معروف'
-        const statusMessage = `خطأ في حفظ مفتاح ${service}: ${errorMessage}`
+        const error_message = err instanceof Error ? err.message : 'خطأ غير معروف'
+        const status_message = `خطأ في حفظ مفتاح ${service}: ${error_message}`
 
         if (service === 'gemini') {
-            geminiStatus = statusMessage
-            geminiKeyValid = false
+            gemini_status = status_message
+            gemini_key_valid = false
         } else {
-            openaiStatus = statusMessage
-            openaiKeyValid = false
+            openai_status = status_message
+            openai_key_valid = false
         }
     }
 }
 
 /**
  * Checks if an API key exists for the specified service
- * @param {ApiKeyType} service - The service to check
+ * @param {api_key_type} service - The service to check
  */
-async function checkKeyStatus(service) {
+async function check_key_status(service) {
     if (service !== 'gemini' && service !== 'openai') return
-    const keyExists = await hasApiKey(service)
+    const keyExists = await has_api_key(service)
     if (service === 'gemini') {
-        geminiKeyValid = keyExists
-        geminiStatus = keyExists ? 'تم تعيين مفتاح Gemini API' : ''
+        gemini_key_valid = keyExists
+        gemini_status = keyExists ? 'تم تعيين مفتاح Gemini API' : ''
     } else {
-        openaiKeyValid = keyExists
-        openaiStatus = keyExists ? 'تم تعيين مفتاح OpenAI API' : ''
+        openai_key_valid = keyExists
+        openai_status = keyExists ? 'تم تعيين مفتاح OpenAI API' : ''
     }
 }
 </script>

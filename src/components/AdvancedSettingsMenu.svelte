@@ -148,7 +148,7 @@ import {
     Download,
     PaintBucket,
 } from '@steeze-ui/lucide-icons'
-import {showNotification} from '../lib/stores/notification'
+import {show_notification} from '../lib/stores/notification'
 import {slide, fade} from 'svelte/transition'
 import {Button} from '../lib/components/ui/button'
 import {
@@ -242,7 +242,7 @@ function saveSettings() {
     localStorage.setItem('textToolsSettings', JSON.stringify(settings))
 
     // Show success notification
-    showNotification('تم حفظ الإعدادات', 'success')
+    show_notification('تم حفظ الإعدادات', 'success')
 }
 
 // Load settings from localStorage

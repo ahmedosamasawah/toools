@@ -21,7 +21,7 @@
 
 <script>
 import {Dialog as DialogPrimitive} from 'bits-ui'
-import X from 'lucide-svelte/icons/x'
+import X from '@lucide/svelte/icons/x'
 import * as Dialog from './index.js'
 import {cn, flyAndScale} from '$lib/utils.js'
 let className = undefined
