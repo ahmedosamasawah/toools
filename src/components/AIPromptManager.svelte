@@ -66,11 +66,11 @@
                                     <span>استعادة</span>
                                 </Button>
                                 <Button
-                                    disabled={editable_prompts[key] === $custom_prompts[key]}
-                                    onclick={() => save_prompt(key)}
-                                    variant="default"
                                     size="sm"
+                                    variant="default"
                                     class="cursor-pointer"
+                                    onclick={() => save_prompt(key)}
+                                    disabled={editable_prompts[key] === $custom_prompts[key]}
                                 >
                                     <Save class="ml-2 h-4 w-4" />
                                     <span>حفظ</span>

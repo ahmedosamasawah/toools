@@ -13,7 +13,7 @@
                 class="min-h-20"
             />
 
-            <div class="h-64 overflow-auto rounded-md border p-4">
+            <div class="h-full overflow-auto rounded-md border p-4">
                 <div class="flex flex-wrap gap-2">
                     {#each [...text] as char}
                         {#if char === ' '}

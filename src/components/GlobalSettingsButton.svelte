@@ -76,6 +76,24 @@
     </Dialog.Root>
 {/if}
 
+{#if show_openai_dialog}
+    <Dialog.Root open={show_openai_dialog} onOpenChange={set_openai_dialog}>
+        <Dialog.Content>
+            <Dialog.Header>
+                <Dialog.Title>إعداد مفتاح OpenAI API</Dialog.Title>
+                <Dialog.Description
+                    >تحتاج إلى مفتاح OpenAI API لاستخدام هذه الميزة.</Dialog.Description
+                >
+            </Dialog.Header>
+            <APIKeyDialog
+                api_key_type="openai"
+                on_save={handle_save_key}
+                on_cancel={() => set_openai_dialog(false)}
+            />
+        </Dialog.Content>
+    </Dialog.Root>
+{/if}
+
 <script>
 import {Settings} from '@lucide/svelte'
 import APIKeyDialog from './APIKeyDialog.svelte'
