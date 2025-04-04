@@ -187,6 +187,7 @@ import {Checkbox} from '$lib/components/ui/checkbox/index.js'
 import {Input} from '$lib/components/ui/input/index.js'
 import {Label} from '$lib/components/ui/label/index.js'
 import {enhance_ocr_text} from '$lib/utils/gemini-service.js'
+import {enable_exit_warning} from '$lib/utils/page-exit-warning.js'
 
 import FileDropzone from '../components/FileDropzone.svelte'
 
@@ -194,6 +195,16 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
     'pdfjs-dist/build/pdf.worker.mjs',
     import.meta.url,
 ).toString()
+
+/** @type {Function | null} */
+let disable_warning = null
+
+onDestroy(() => {
+    if (disable_warning) {
+        disable_warning()
+        disable_warning = null
+    }
+})
 
 //---------------------------------------------------------------
 // State variables
@@ -231,6 +242,14 @@ let total_chunks = $state(0)
 let extracted_text = $state('')
 let copied = $state(false)
 
+$effect(() => {
+    if (is_processing && !disable_warning) disable_warning = enable_exit_warning()
+    else if (!is_processing && disable_warning) {
+        disable_warning()
+        disable_warning = null
+    }
+})
+
 // Constants
 const MAX_CHUNK_SIZE = 20000 // Maximum text size for a single Gemini API call
 
@@ -242,10 +261,9 @@ const MAX_CHUNK_SIZE = 20000 // Maximum text size for a single Gemini API call
 const tick = () => new Promise(resolve => setTimeout(resolve, 0))
 
 /**
- * Parse page range string into array of page numbers
- * @param {string} range_str - Range string (e.g. "1-3,5,7-9")
- * @param {number} total_pages - Total number of pages in PDF
- * @returns {number[]} - Array of page numbers to process
+ * @param {string} range_str
+ * @param {number} total_pages
+ * @returns {number[]}
  */
 function parse_page_range(range_str, total_pages) {
     if (!range_str.trim()) return Array.from({length: total_pages}, (_, i) => i + 1)
@@ -274,11 +292,7 @@ function parse_page_range(range_str, total_pages) {
 // File handling functions
 //---------------------------------------------------------------
 
-/**
- * Process and validate selected PDF file
- * @param {File[]} files - Selected files
- * @returns {File[]} - Accepted files
- */
+/** @param {File[]} files */
 function process_selected_file(files) {
     error = ''
     file_error = ''
@@ -295,7 +309,6 @@ function process_selected_file(files) {
     return files
 }
 
-/** Clear the selected PDF file */
 function clear_pdf_file() {
     file_error = ''
     pdf_file = null
@@ -307,43 +320,22 @@ function clear_pdf_file() {
     if (file_input) file_input.value = ''
 }
 
-/** Copy extracted text to clipboard */
 async function copy_to_clipboard() {
     if (!extracted_text) return
 
-    try {
-        await navigator.clipboard.writeText(extracted_text)
-        copied = true
-        setTimeout(() => (copied = false), 2000)
-    } catch (/** @type {unknown} */ err) {
-        console.error('Failed to copy text:', err)
-        error = 'فشل نسخ النص إلى الحافظة'
-    }
+    await navigator.clipboard.writeText(extracted_text)
+    copied = true
+    setTimeout(() => (copied = false), 2000)
 }
 
 //---------------------------------------------------------------
 // Text processing functions
 //---------------------------------------------------------------
 
-/**
- * Process extracted text with Gemini API
- * @param {string} text - Text to process
- * @returns {Promise<string>} - Enhanced text
- */
-async function process_extracted_text(text) {
-    try {
-        return await enhance_ocr_text(text)
-    } catch (/** @type {unknown} */ err) {
-        console.error('Error processing text with Gemini:', err)
-        return text
-    }
-}
+/** @param {string} text */
+const process_extracted_text = async text => await enhance_ocr_text(text)
 
-/**
- * Process large text in chunks to avoid API limits
- * @param {string} text - Text to process in chunks
- * @returns {Promise<string>} - Combined processed text
- */
+/** @param {string} text */
 async function process_text_in_chunks(text) {
     if (text.length <= MAX_CHUNK_SIZE) {
         total_chunks = 1
@@ -394,11 +386,9 @@ async function process_text_in_chunks(text) {
 // Main PDF processing function
 //---------------------------------------------------------------
 
-/** Extract text from PDF file */
 async function extract_text_from_pdf() {
     if (!pdf_file) return
 
-    // Reset states
     error = ''
     total_pages = 0
     total_chunks = 0

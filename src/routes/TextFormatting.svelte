@@ -119,17 +119,35 @@ import {Button} from '$lib/components/ui/button/index.js'
 import {Label} from '$lib/components/ui/label/index.js'
 import {Textarea} from '$lib/components/ui/textarea/index.js'
 import {add_diacritics, format_text} from '$lib/utils/gemini-service.js'
+import {enable_exit_warning} from '$lib/utils/page-exit-warning.js'
 
 let error = $state('')
 let copied = $state(false)
+
+/** @type {Function | null} */
+let disable_warning = null
+
 let input_text = $state('')
 let output_text = $state('')
 let processing_type = $state('')
 let is_processing = $state(false)
 
-/**
- * @param {'format' | 'diacritics'} type
- */
+onDestroy(() => {
+    if (disable_warning) {
+        disable_warning()
+        disable_warning = null
+    }
+})
+
+$effect(() => {
+    if (is_processing && !disable_warning) disable_warning = enable_exit_warning()
+    else if (!is_processing && disable_warning) {
+        disable_warning()
+        disable_warning = null
+    }
+})
+
+/** @param {'format' | 'diacritics'} type */
 async function process_text(type) {
     if (!input_text.trim()) return
 
@@ -151,14 +169,8 @@ async function process_text(type) {
 
 async function copy_to_clipboard() {
     if (!output_text) return
-
-    try {
-        await navigator.clipboard.writeText(output_text)
-        copied = true
-        setTimeout(() => (copied = false), 2000)
-    } catch (err) {
-        console.error('فشل نسخ النص:', err)
-        error = 'فشل نسخ النص إلى الحافظة'
-    }
+    await navigator.clipboard.writeText(output_text)
+    copied = true
+    setTimeout(() => (copied = false), 2000)
 }
 </script>

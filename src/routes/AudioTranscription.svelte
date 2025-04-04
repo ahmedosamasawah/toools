@@ -382,6 +382,7 @@ import {
     transcribe_audio,
     validate_audio_file,
 } from '$lib/utils/openai-service.js'
+import {enable_exit_warning} from '$lib/utils/page-exit-warning.js'
 
 import RequireAPIKey from '../components/RequireAPIKey.svelte'
 
@@ -416,11 +417,27 @@ let is_diacritics_processing = $state(false)
 /** @type {{ minutes: number, cost: number } | null} */
 let estimated_duration = $state(null)
 
-/**
- * Helper function to get the display label for a language code
- * @param {string} langCode
- * @returns {string}
- */
+/** @type {Function | null} */
+let disable_warning = $state(null)
+
+$effect(() => {
+    const is_any_processing = is_transcribing || is_diacritics_processing || is_ai_processing
+
+    if (is_any_processing && !disable_warning) disable_warning = enable_exit_warning()
+    else if (!is_any_processing && disable_warning) {
+        disable_warning()
+        disable_warning = null
+    }
+})
+
+onDestroy(() => {
+    if (disable_warning) {
+        disable_warning()
+        disable_warning = null
+    }
+})
+
+/** @param {string} langCode */
 function getLanguageLabel(langCode) {
     const languageMap = {
         '': 'كشف تلقائي للغة',
@@ -434,16 +451,10 @@ function getLanguageLabel(langCode) {
     return languageMap[langCode] || 'كشف تلقائي للغة'
 }
 
-/**
- * @param {string} value
- */
-function handleLanguageChange(value) {
-    language = value
-}
+/** @param {string} value */
+const handleLanguageChange = value => (language = value)
 
-/**
- * @param {File} file
- */
+/** @param {File} file */
 function process_selected_file(file) {
     error = ''
     file_error = ''
@@ -465,9 +476,7 @@ function process_selected_file(file) {
     if (duration) estimated_duration = duration
 }
 
-/**
- * @param {'summary' | 'translate' | 'tasks'} type
- */
+/** @param {'summary' | 'translate' | 'tasks'} type */
 async function process_transcript_with_ai(type) {
     if (!transcription_result || is_ai_processing) return
 
