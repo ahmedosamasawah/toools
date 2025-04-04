@@ -17,59 +17,17 @@
                     {/if}
                 </div>
 
-                <div
-                    onkeydown={e => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault()
-                            file_input?.click()
-                        }
-                    }}
-                    tabindex="0"
-                    role="button"
-                    ondrop={handle_drop_file}
-                    onclick={() => file_input?.click()}
-                    class:border-primary={is_dragging}
-                    ondragover={e => e.preventDefault()}
-                    ondragenter={() => (is_dragging = true)}
-                    ondragleave={() => (is_dragging = false)}
-                    class="group relative flex cursor-pointer flex-col items-center justify-center rounded-md border border-dashed p-8"
+                <FileDropzone
+                    file={pdf_file}
+                    info_text="PDF"
+                    error={file_error}
+                    accepted_mimes={['.pdf']}
+                    handle_files={files => process_selected_file(files)}
                 >
-                    <input
-                        type="file"
-                        class="hidden"
-                        accept=".pdf"
-                        bind:this={file_input}
-                        onchange={handle_file_select}
-                    />
-
-                    {#if pdf_file}
-                        <div class="flex w-full flex-col items-center gap-2">
-                            <div
-                                class="bg-primary/10 flex h-12 w-12 items-center justify-center rounded-full"
-                            >
-                                <FileText class="text-primary h-6 w-6" />
-                            </div>
-                            <div class="text-center">
-                                <p class="text-sm font-medium">{pdf_file.name}</p>
-                                <p class="text-muted-foreground text-xs">
-                                    {format_file_size(pdf_file.size)}
-                                </p>
-                            </div>
-                        </div>
-                    {:else}
-                        <div class="flex flex-col items-center gap-2 text-center">
-                            <div
-                                class="text-muted-foreground bg-muted/50 flex h-12 w-12 items-center justify-center rounded-full"
-                            >
-                                <Upload class="h-6 w-6" />
-                            </div>
-                            <div>
-                                <p class="text-sm font-medium">اضغط لاختيار ملف أو اسحب وأفلت</p>
-                                <p class="text-muted-foreground mt-1 text-xs">PDF</p>
-                            </div>
-                        </div>
-                    {/if}
-                </div>
+                    <svelte:fragment slot="file-icon">
+                        <FileText class="text-primary h-6 w-6" />
+                    </svelte:fragment>
+                </FileDropzone>
 
                 {#if file_error}
                     <p class="text-destructive text-sm">{file_error}</p>
@@ -218,17 +176,19 @@
 </div>
 
 <script>
+import {AlertCircle, Check, Copy, FileSearch, FileText, Loader2, X} from '@lucide/svelte'
+import * as pdfjs from 'pdfjs-dist'
+
 import {RequireAPIKey} from '$lib/api/index.js'
+import {Alert, AlertDescription, AlertTitle} from '$lib/components/ui/alert/index.js'
+import {Button} from '$lib/components/ui/button/index.js'
+import {Card, CardContent, CardHeader, CardTitle} from '$lib/components/ui/card/index.js'
+import {Checkbox} from '$lib/components/ui/checkbox/index.js'
 import {Input} from '$lib/components/ui/input/index.js'
 import {Label} from '$lib/components/ui/label/index.js'
-import {Button} from '$lib/components/ui/button/index.js'
-import {Checkbox} from '$lib/components/ui/checkbox/index.js'
 import {enhance_ocr_text} from '$lib/utils/gemini-service.js'
-import {Alert, AlertTitle, AlertDescription} from '$lib/components/ui/alert/index.js'
-import {Card, CardHeader, CardTitle, CardContent} from '$lib/components/ui/card/index.js'
-import {Loader2, FileText, Upload, X, AlertCircle, FileSearch, Copy, Check} from '@lucide/svelte'
 
-import * as pdfjs from 'pdfjs-dist'
+import FileDropzone from '../components/FileDropzone.svelte'
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
     'pdfjs-dist/build/pdf.worker.mjs',
@@ -242,10 +202,9 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 // File handling states
 /** @type {File | null} */
 let pdf_file = $state(null)
-/** @type {HTMLInputElement} */
-let file_input
+/** @type {HTMLInputElement | null} */
+let file_input = null
 let file_error = $state('')
-let is_dragging = $state(false)
 
 // Processing states
 let is_processing = $state(false)
@@ -283,16 +242,6 @@ const MAX_CHUNK_SIZE = 20000 // Maximum text size for a single Gemini API call
 const tick = () => new Promise(resolve => setTimeout(resolve, 0))
 
 /**
- * Format file size to human-readable format
- * @param {number} bytes - File size in bytes
- */
-function format_file_size(bytes) {
-    if (bytes < 1024) return bytes + ' bytes'
-    else if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
-    else return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
-}
-
-/**
  * Parse page range string into array of page numbers
  * @param {string} range_str - Range string (e.g. "1-3,5,7-9")
  * @param {number} total_pages - Total number of pages in PDF
@@ -326,40 +275,24 @@ function parse_page_range(range_str, total_pages) {
 //---------------------------------------------------------------
 
 /**
- * Handle file selection from file input
- * @param {Event} event - File input change event
- */
-function handle_file_select(event) {
-    const files = /** @type {HTMLInputElement} */ (event.target).files
-    if (files && files.length > 0) process_selected_file(files[0])
-}
-
-/**
- * Handle drag and drop file upload
- * @param {DragEvent} event - Drag event
- */
-function handle_drop_file(event) {
-    event.preventDefault()
-    is_dragging = false
-
-    const files = event.dataTransfer?.files
-    if (files && files.length > 0) process_selected_file(files[0])
-}
-
-/**
  * Process and validate selected PDF file
- * @param {File} file - Selected file
+ * @param {File[]} files - Selected files
+ * @returns {File[]} - Accepted files
  */
-function process_selected_file(file) {
+function process_selected_file(files) {
     error = ''
     file_error = ''
 
+    if (!files || files.length === 0) return []
+
+    const file = files[0]
     if (!file.type.includes('pdf')) {
         file_error = 'نوع الملف غير مدعوم. يرجى اختيار ملف PDF.'
-        return
+        return []
     }
 
     pdf_file = file
+    return files
 }
 
 /** Clear the selected PDF file */

@@ -92,32 +92,46 @@
 </div>
 
 <script>
-// import {onMount} from 'svelte'
-import {Input} from '../lib/components/ui/input'
-import {Label} from '../lib/components/ui/label'
-import {Switch} from '../lib/components/ui/switch'
-import * as DiffMatchPatch from 'diff-match-patch'
-import {Textarea} from '../lib/components/ui/textarea'
-import {Card, CardContent} from '../lib/components/ui/card'
 import ChevronDown from '@lucide/svelte/icons/chevron-down'
-import {Collapsible, CollapsibleContent, CollapsibleTrigger} from '../lib/components/ui/collapsible'
+import * as DiffMatchPatch from 'diff-match-patch'
+
+import {Card, CardContent} from '$ui/card/index.js'
+import {Collapsible, CollapsibleContent, CollapsibleTrigger} from '$ui/collapsible/index.js'
+import {Input} from '$ui/input/index.js'
+import {Label} from '$ui/label/index.js'
+import {Switch} from '$ui/switch/index.js'
+import {Textarea} from '$ui/textarea/index.js'
+
+import {text_area_store} from '../stores.svelte.js'
 
 /**
  * @typedef {[number, string]} DiffTuple
  */
 
-let text_a = ''
-let text_b = ''
-let timeout = 30
-let edit_cost = 4
-let is_open = false
-let cleanup_semantic = true
-let cleanup_efficiency = false
+const TEXT_A_KEY = 'diff-viewer-text-a'
+const TEXT_B_KEY = 'diff-viewer-text-b'
+
+// Get stored values from the store
+const stored_text_a = text_area_store.get_text(TEXT_A_KEY)
+const stored_text_b = text_area_store.get_text(TEXT_B_KEY)
+
+let text_a = $derived($stored_text_a)
+let text_b = $derived($stored_text_b)
+let timeout = $state(30)
+let edit_cost = $state(4)
+let is_open = $state(false)
+let cleanup_semantic = $state(true)
+let cleanup_efficiency = $state(false)
+
+$effect(() => {
+    text_area_store.update(TEXT_A_KEY, text_a)
+})
+
+$effect(() => {
+    text_area_store.update(TEXT_B_KEY, text_b)
+})
 
 const dmp = new DiffMatchPatch.diff_match_patch()
-
-/** @type {DiffTuple[]} */
-$: diff_data = get_diff(text_a, text_b)
 
 /**
  * @param {string} a
@@ -136,6 +150,8 @@ function get_diff(a, b) {
 
     return /** @type {DiffTuple[]} */ (diff)
 }
+/** @type {DiffTuple[]} */
+let diff_data = $derived(get_diff(text_a, text_b))
 </script>
 
 <style>

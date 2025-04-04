@@ -1,6 +1,6 @@
 <div class="bg-background flex h-screen font-sans">
     <Sidebar
-        {current_tab}
+        current_tab={route.path.substring(1) || 'text-cleaner'}
         {show_notification}
         is_expanded={sidebar_expanded}
         on_tab_change={handle_tab_change}
@@ -9,7 +9,7 @@
     <div
         class={{
             'flex-1 overflow-auto transition-all duration-300': true,
-            'hidden md:block': sidebar_expanded,
+            ' md:block': sidebar_expanded,
             block: !sidebar_expanded,
         }}
     >
@@ -28,27 +28,19 @@
             <main class="flex-grow">
                 <div class="bg-card rounded-lg p-4 shadow-md">
                     <div>
-                        {#if current_tab === 'text-cleaner'}
-                            <TextCleaner {show_notification} />
-                        {:else if current_tab === 'arabic-transcription'}
-                            <ArabicTranscription {show_notification} />
-                        {:else if current_tab === 'unichar'}
-                            <Unichar {show_notification} />
-                        {:else if current_tab === 'diff-viewer'}
-                            <DiffViewer />
-                        {:else if current_tab === 'quran-fonts'}
-                            <QuranFontRenderer {show_notification} />
-                        {:else if current_tab === 'text-formatting'}
-                            <TextFormatting />
-                        {:else if current_tab === 'audio-transcription'}
-                            <AudioTranscription />
-                        {:else if current_tab === 'pdf-ocr'}
-                            <PDFOcr />
+                        {#if Component}
+                            <Component params={route.params} {show_notification} />
+                        {/if}
+                        {#if is404}
+                            <div class="p-6 text-center">
+                                <h1 class="mb-4 text-3xl font-bold">404 - صفحة غير موجودة</h1>
+                                <a href="/" class="text-primary hover:underline">الرئيسية</a>
+                            </div>
                         {/if}
                     </div>
                 </div>
 
-                {#if current_tab === 'text-cleaner'}
+                {#if route.path === '/' || route.path === '/text-cleaner'}
                     <div class="my-8 border-t"></div>
 
                     <div class="bg-card rounded-lg p-6 shadow-md">
@@ -77,42 +69,97 @@
                     </div>
                 {/if}
             </main>
-
-            <footer
-                class="text-muted-foreground bg-card mt-6 rounded-lg px-6 py-4 text-center text-sm shadow-sm"
-            >
-                من مشاريع <a href="https://nuqayah.com" class="text-primary hover:underline"
-                    >نُقاية</a
-                >
-            </footer>
+            <Footer />
         </div>
     </div>
 </div>
 
+<script module>
+import navaid from 'navaid'
+import {setContext} from 'svelte'
+
+// prettier-ignore
+/** @type {Array<[string, Promise<any>]>} */
+const routes = [
+    ['/',                     import('./routes/TextCleaner.svelte')],
+    ['/text-cleaner',         import('./routes/TextCleaner.svelte')],
+    ['/arabic-transcription', import('./routes/ArabicTranscription.svelte')],
+    ['/unichar',              import('./routes/Unichar.svelte')],
+    ['/diff-viewer',          import('./routes/DiffViewer.svelte')],
+    ['/quran-fonts',          import('./routes/QuranFontRenderer.svelte')],
+    ['/text-formatting',      import('./routes/TextFormatting.svelte')],
+    ['/audio-transcription',  import('./routes/AudioTranscription.svelte')],
+    ['/pdf-ocr',              import('./routes/PDFOcr.svelte')],
+]
+
+/** @type {any | null} */
+let Component = $state(null)
+let is404 = $state(false)
+let route = $state({
+    path: location.pathname,
+    params: /** @type {import('navaid').Params | undefined} */ (undefined),
+})
+
+export const router = navaid('/', async uri => {
+    is404 = true
+    Component = null
+    route.path = uri
+    route.params = undefined
+})
+
+for (const [path, cmp_] of routes) {
+    router.on(path.toString(), params => {
+        is404 = false
+        document.startViewTransition
+            ? document.startViewTransition(async () => {
+                  const {default: cmp, ...exports} = await cmp_
+
+                  if (exports?.validate_params && !(await exports.validate_params(params))) {
+                      router.route('/')
+                      return
+                  }
+
+                  Component = cmp
+                  route.path = location.pathname
+                  route.params = params
+              })
+            : (async () => {
+                  const {default: cmp, ...exports} = await cmp_
+
+                  if (exports?.validate_params && !(await exports.validate_params(params))) {
+                      router.route('/')
+                      return
+                  }
+
+                  Component = cmp
+                  route.path = location.pathname
+                  route.params = params
+              })()
+    })
+}
+
+router.listen()
+</script>
+
 <script>
-import {onMount} from 'svelte'
+import {Button} from '$ui/button/index.js'
 
-import PDFOcr from './components/PDFOcr.svelte'
+import Footer from './components/Footer.svelte'
 import Sidebar from './components/Sidebar.svelte'
-import {Button} from './lib/components/ui/button'
-import Unichar from './components/Unichar.svelte'
-import DiffViewer from './components/DiffViewer.svelte'
-import TextCleaner from './components/TextCleaner.svelte'
-import TextFormatting from './components/TextFormatting.svelte'
-import QuranFontRenderer from './components/QuranFontRenderer.svelte'
-import AudioTranscription from './components/AudioTranscription.svelte'
-import ArabicTranscription from './components/ArabicTranscription.svelte'
-import {show_notification, notification} from './lib/stores/notification'
+import {notification, show_notification} from './lib/stores/notification.js'
 
-let sidebar_expanded = true
-let current_tab = 'text-cleaner'
+setContext('router', router)
+
+let sidebar_expanded = $state(false)
+const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
+sidebar_expanded = isMobile ? false : true
 
 /**
  * Handle tab change from sidebar
  * @param {string} tab - The new tab ID
  */
 function handle_tab_change(tab) {
-    current_tab = tab
+    router.route('/' + tab)
 }
 
 /**
@@ -120,7 +167,6 @@ function handle_tab_change(tab) {
  */
 function handle_sidebar_toggle() {
     sidebar_expanded = !sidebar_expanded
-    console.log('Sidebar toggled:', sidebar_expanded)
 }
 
 /**
@@ -175,11 +221,6 @@ function copy_to_clipboard(text) {
     navigator.clipboard.writeText(text)
     show_notification('تم النسخ', 'success')
 }
-
-onMount(() => {
-    document.documentElement.setAttribute('dir', 'rtl')
-    document.documentElement.setAttribute('lang', 'ar')
-})
 </script>
 
 <style>

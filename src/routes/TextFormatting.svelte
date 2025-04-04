@@ -111,13 +111,14 @@
 </div>
 
 <script>
+import {AlertCircle, Check, Copy, Eraser, FileText, Loader2, TextQuote, Type} from '@lucide/svelte'
+
 import {RequireAPIKey} from '$lib/api/index.js'
-import {Label} from '$lib/components/ui/label/index.js'
+import {Alert, AlertDescription, AlertTitle} from '$lib/components/ui/alert/index.js'
 import {Button} from '$lib/components/ui/button/index.js'
+import {Label} from '$lib/components/ui/label/index.js'
 import {Textarea} from '$lib/components/ui/textarea/index.js'
-import {format_text, add_diacritics} from '$lib/utils/gemini-service.js'
-import {Alert, AlertTitle, AlertDescription} from '$lib/components/ui/alert/index.js'
-import {TextQuote, Type, Loader2, Copy, Check, FileText, Eraser, AlertCircle} from '@lucide/svelte'
+import {add_diacritics, format_text} from '$lib/utils/gemini-service.js'
 
 let error = $state('')
 let copied = $state(false)

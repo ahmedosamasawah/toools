@@ -18,16 +18,17 @@
 </Dialog.Root>
 
 <script>
-import AIPromptManager from './AIPromptManager.svelte'
 import {Button} from '$lib/components/ui/button/index.js'
 import * as Dialog from '$lib/components/ui/dialog/index.js'
 
-/**
- * @param {string} message
- * @param {string} [type='default']
- */
-export let show_notification = /** @type {(message: string, type?: string) => void} */ (() => {})
+import AIPromptManager from './AIPromptManager.svelte'
 
-/** @type {boolean} */
-export let dialog_open = false
+/**
+ * @typedef {Object} Props
+ * @property {any} [show_notification]
+ * @property {boolean} [dialog_open]
+ */
+
+/** @type {Props} */
+let {show_notification = () => {}, dialog_open = $bindable(false)} = $props()
 </script>

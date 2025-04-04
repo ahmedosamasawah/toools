@@ -5,7 +5,7 @@
         'focus-visible:ring-ring focus-visible:ring-offset-background data-[state=checked]:bg-primary data-[state=unchecked]:bg-input peer inline-flex h-[24px] w-[44px] shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50',
         className,
     )}
-    {...$$restProps}
+    {...rest}
     on:click
     on:keydown
 >
@@ -18,8 +18,8 @@
 
 <script>
 import {Switch as SwitchPrimitive} from 'bits-ui'
+
 import {cn} from '$lib/utils.js'
-let className = undefined
-export let checked = undefined
-export {className as class}
+
+let {class: className = undefined, checked = $bindable(undefined), ...rest} = $props()
 </script>

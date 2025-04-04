@@ -44,12 +44,14 @@
 </div>
 
 <script>
-import {onMount} from 'svelte'
 import {Key} from '@lucide/svelte'
-import {has_api_key} from '$lib/utils/api-keys.js'
-import APIKeyDialog from './APIKeyDialog.svelte'
+import {onMount} from 'svelte'
+
 import {Button} from '$lib/components/ui/button/index.js'
 import * as Dialog from '$lib/components/ui/dialog/index.js'
+import {has_api_key} from '$lib/utils/api-keys.js'
+
+import APIKeyDialog from './APIKeyDialog.svelte'
 
 /**
  * @typedef {'gemini' | 'openai'} api_key_type

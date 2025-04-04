@@ -1,4 +1,4 @@
-<div class="flex flex-col space-y-6">
+<div class="flex flex-col space-y-6 font-['Kitab']">
     <RequireAPIKey api_key_type="openai">
         <div class="flex flex-col space-y-5">
             <div class="flex flex-col space-y-3">
@@ -17,64 +17,43 @@
                     {/if}
                 </div>
 
-                <div
-                    onkeydown={e => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault()
-                            fileInput?.click()
-                        }
+                <FileDropzone
+                    file={audio_file}
+                    handle_files={files => {
+                        process_selected_file(files[0])
+                        return files
                     }}
-                    tabindex="0"
-                    role="button"
-                    ondrop={handle_drop_file}
-                    class:border-primary={is_dragging}
-                    ondragenter={() => (is_dragging = true)}
-                    ondragleave={() => (is_dragging = false)}
-                    ondragover={e => e.preventDefault()}
-                    onclick={() => fileInput?.click()}
-                    class="group relative flex cursor-pointer flex-col items-center justify-center rounded-md border border-dashed p-8"
+                    accepted_mimes={[
+                        'audio/mp3',
+                        'audio/mpeg',
+                        'audio/wav',
+                        'audio/ogg',
+                        'audio/mp4',
+                        'audio/x-m4a',
+                        'audio/m4a',
+                        'audio/flac',
+                        'audio/x-hx-aac-adts',
+                        'video/mp4', // Some browsers classify MP4 audio as video/mp4
+                        '.mp3',
+                        '.wav',
+                        '.ogg',
+                        '.mp4',
+                        '.m4a',
+                        '.flac',
+                    ]}
+                    error={file_error}
+                    info_text="MP3, WAV, M4A, FLAC, OGG .(الحد الأقصى 25 ميجابايت)"
                 >
-                    <input
-                        type="file"
-                        class="hidden"
-                        accept="audio/*"
-                        bind:this={fileInput}
-                        onchange={handle_file_select}
-                    />
+                    <svelte:fragment slot="file-icon">
+                        <FileAudio class="text-primary h-6 w-6" />
+                    </svelte:fragment>
 
-                    {#if audio_file}
-                        <div class="flex w-full flex-col items-center gap-2">
-                            <div
-                                class="bg-primary/10 flex h-12 w-12 items-center justify-center rounded-full"
-                            >
-                                <FileAudio class="text-primary h-6 w-6" />
-                            </div>
-                            <div class="text-center">
-                                <p class="text-sm font-medium">{audio_file.name}</p>
-                                <p class="text-muted-foreground text-xs">
-                                    {format_file_size(audio_file.size)}
-                                    {#if estimated_duration}
-                                        • {estimated_duration.minutes} دقيقة تقريبًا
-                                    {/if}
-                                </p>
-                            </div>
-                        </div>
-                    {:else}
-                        <div class="flex flex-col items-center gap-2 text-center">
-                            <div
-                                class="text-muted-foreground bg-muted/50 flex h-12 w-12 items-center justify-center rounded-full"
-                            >
-                                <Upload class="h-6 w-6" />
-                            </div>
-                            <div>
-                                <p class="text-sm font-medium">اضغط لاختيار ملف أو اسحب وأفلت</p>
-                                <p class="text-muted-foreground mt-1 text-xs">
-                                    MP3, WAV, M4A, FLAC, OGG (الحد الأقصى 25 ميجابايت)
-                                </p>
-                            </div>
-                        </div>
-                    {/if}
-                </div>
+                    <svelte:fragment slot="file-info">
+                        {#if estimated_duration}
+                            • {estimated_duration.minutes} دقيقة تقريبًا
+                        {/if}
+                    </svelte:fragment>
+                </FileDropzone>
 
                 {#if file_error}
                     <p class="text-destructive text-sm">{file_error}</p>
@@ -84,19 +63,54 @@
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div class="flex flex-col space-y-2">
                     <Label for="language-select">اللغة (اختياري)</Label>
-                    <Select bind:selected={selected_language}>
-                        <SelectTrigger id="language-select" class="w-full">
-                            <SelectValue placeholder="كشف تلقائي للغة" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value={''}>كشف تلقائي</SelectItem>
-                            <SelectItem value={'ar'}>العربية</SelectItem>
-                            <SelectItem value={'en'}>الإنجليزية</SelectItem>
-                            <SelectItem value={'fr'}>الفرنسية</SelectItem>
-                            <SelectItem value={'de'}>الألمانية</SelectItem>
-                            <SelectItem value={'es'}>الإسبانية</SelectItem>
-                        </SelectContent>
-                    </Select>
+
+                    <div class="relative mx-auto w-full">
+                        <Select value={language} onValueChange={handleLanguageChange} type="single">
+                            <SelectTrigger
+                                id="language-select"
+                                class="w-full rounded border text-right"
+                            >
+                                {#if language}
+                                    <span>{getLanguageLabel(language)}</span>
+                                {:else}
+                                    <span>كشف تلقائي للغة</span>
+                                {/if}
+                            </SelectTrigger>
+                            <SelectContent
+                                dir="rtl"
+                                position="popper"
+                                sideOffset={5}
+                                portalProps={{}}
+                                class="z-50 max-h-72 overflow-y-auto font-['Kitab']"
+                            >
+                                <SelectItem
+                                    value="ar"
+                                    label="العربية"
+                                    class="cursor-pointer text-right">العربية</SelectItem
+                                >
+                                <SelectItem
+                                    value="en"
+                                    label="الإنجليزية"
+                                    class="cursor-pointer text-right">الإنجليزية</SelectItem
+                                >
+                                <SelectItem
+                                    value="fr"
+                                    label="الفرنسية"
+                                    class="cursor-pointer text-right">الفرنسية</SelectItem
+                                >
+                                <SelectItem
+                                    value="de"
+                                    label="الألمانية"
+                                    class="cursor-pointer text-right">الألمانية</SelectItem
+                                >
+                                <SelectItem
+                                    value="es"
+                                    label="الإسبانية"
+                                    class="cursor-pointer text-right">الإسبانية</SelectItem
+                                >
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </div>
 
                 <div class="flex flex-col space-y-2">
@@ -328,52 +342,48 @@
 
 <script>
 import {
-    X,
-    Type,
-    Copy,
-    Check,
-    Upload,
-    Loader2,
-    FileText,
-    ListTodo,
-    Languages,
-    FileAudio,
     AlertCircle,
     BrainCircuit,
+    Check,
+    Copy,
+    FileAudio,
+    FileText,
+    Languages,
+    ListTodo,
+    Loader2,
+    Type,
+    X,
 } from '@lucide/svelte'
 
-import {
-    Select,
-    SelectItem,
-    SelectValue,
-    SelectContent,
-    SelectTrigger,
-} from '$lib/components/ui/select'
-
-import {
-    transcribe_audio,
-    validate_audio_file,
-    estimate_transcription_cost,
-} from '$lib/utils/openai-service.js'
-
-import {
-    DropdownMenu,
-    DropdownMenuItem,
-    DropdownMenuContent,
-    DropdownMenuTrigger,
-} from '$lib/components/ui/dropdown-menu/index.js'
-
-import {has_api_key} from '$lib/utils/api-keys.js'
-import RequireAPIKey from './RequireAPIKey.svelte'
-import {Input} from '$lib/components/ui/input/index.js'
-import {Label} from '$lib/components/ui/label/index.js'
+import FileDropzone from '~/components/FileDropzone.svelte'
+import {Alert, AlertDescription, AlertTitle} from '$lib/components/ui/alert/index.js'
 import {Badge} from '$lib/components/ui/badge/index.js'
 import {Button} from '$lib/components/ui/button/index.js'
-import {add_diacritics} from '$lib/utils/gemini-service.js'
-import {Alert, AlertTitle, AlertDescription} from '$lib/components/ui/alert/index.js'
-import {Tabs, TabsList, TabsContent, TabsTrigger} from '$lib/components/ui/tabs/index.js'
-import {Card, CardHeader, CardTitle, CardContent} from '$lib/components/ui/card/index.js'
-import {summarize_text, translate_text, create_task_list} from '$lib/utils/gemini-service.js'
+import {Card, CardContent, CardHeader, CardTitle} from '$lib/components/ui/card/index.js'
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '$lib/components/ui/dropdown-menu/index.js'
+import {Input} from '$lib/components/ui/input/index.js'
+import {Label} from '$lib/components/ui/label/index.js'
+import {Select, SelectContent, SelectItem, SelectTrigger} from '$lib/components/ui/select/index.js'
+import {Tabs, TabsContent, TabsList, TabsTrigger} from '$lib/components/ui/tabs/index.js'
+import {has_api_key} from '$lib/utils/api-keys.js'
+import {
+    add_diacritics,
+    create_task_list,
+    summarize_text,
+    translate_text,
+} from '$lib/utils/gemini-service.js'
+import {
+    estimate_transcription_cost,
+    transcribe_audio,
+    validate_audio_file,
+} from '$lib/utils/openai-service.js'
+
+import RequireAPIKey from '../components/RequireAPIKey.svelte'
 
 /** @type {string} */
 let processed_result = $state('')
@@ -389,16 +399,12 @@ let active_tab = $state('original')
 let audio_file = $state(null)
 /** @type {string} */
 let language = $state('')
-/** @type {{ value: string }} */
-let selected_language = $state({value: ''})
 /** @type {string} */
 let prompt_text = $state('')
 /** @type {string} */
 let transcription_result = $state('')
 /** @type {boolean} */
 let is_transcribing = $state(false)
-/** @type {boolean} */
-let is_dragging = $state(false)
 /** @type {string} */
 let file_error = $state('')
 /** @type {string} */
@@ -410,28 +416,29 @@ let is_diacritics_processing = $state(false)
 /** @type {{ minutes: number, cost: number } | null} */
 let estimated_duration = $state(null)
 
-/** @type {HTMLInputElement} */
-let fileInput
-
-$effect(() => {
-    language = selected_language.value
-})
-
-/** @param {Event} event */
-function handle_file_select(event) {
-    const files = /** @type {HTMLInputElement} */ (event.target).files
-    if (files && files.length > 0) process_selected_file(files[0])
+/**
+ * Helper function to get the display label for a language code
+ * @param {string} langCode
+ * @returns {string}
+ */
+function getLanguageLabel(langCode) {
+    const languageMap = {
+        '': 'كشف تلقائي للغة',
+        ar: 'العربية',
+        en: 'الإنجليزية',
+        fr: 'الفرنسية',
+        de: 'الألمانية',
+        es: 'الإسبانية',
+    }
+    // @ts-ignore - We know these keys exist
+    return languageMap[langCode] || 'كشف تلقائي للغة'
 }
 
 /**
- * @param {DragEvent} event
+ * @param {string} value
  */
-function handle_drop_file(event) {
-    event.preventDefault()
-    is_dragging = false
-
-    const files = event.dataTransfer?.files
-    if (files && files.length > 0) process_selected_file(files[0])
+function handleLanguageChange(value) {
+    language = value
 }
 
 /**
@@ -464,14 +471,9 @@ function process_selected_file(file) {
 async function process_transcript_with_ai(type) {
     if (!transcription_result || is_ai_processing) return
 
-    try {
-        const has_gemini_key = await has_api_key('gemini')
-        if (!has_gemini_key) {
-            error = 'تحتاج إلى إعداد مفتاح API للذكاء الاصطناعي Gemini لاستخدام هذه الميزة'
-            return
-        }
-    } catch (err) {
-        error = 'فشل التحقق من توفر مفتاح API للذكاء الاصطناعي'
+    const has_gemini_key = await has_api_key('gemini')
+    if (!has_gemini_key) {
+        error = 'تحتاج إلى إعداد مفتاح API للذكاء الاصطناعي Gemini لاستخدام هذه الميزة'
         return
     }
 
@@ -481,32 +483,20 @@ async function process_transcript_with_ai(type) {
     processing_type = type
     active_tab = 'processed'
 
-    try {
-        if (type === 'summary') processed_result = await summarize_text(transcription_result)
-        else if (type === 'translate')
-            processed_result = await translate_text(transcription_result, 'English')
-        else if (type === 'tasks') processed_result = await create_task_list(transcription_result)
-    } catch (/** @type {unknown} */ err) {
-        console.error('Error processing transcript with AI:', err)
-        error = err instanceof Error ? err.message : 'حدث خطأ أثناء معالجة النص بالذكاء الاصطناعي'
-        processing_type = null
-        active_tab = 'original'
-    } finally {
-        is_ai_processing = false
-    }
+    if (type === 'summary') processed_result = await summarize_text(transcription_result)
+    else if (type === 'translate')
+        processed_result = await translate_text(transcription_result, 'English')
+    else if (type === 'tasks') processed_result = await create_task_list(transcription_result)
+
+    is_ai_processing = false
 }
 
 async function copy_processed_result() {
     if (!processed_result) return
 
-    try {
-        await navigator.clipboard.writeText(processed_result)
-        processed_copied = true
-        setTimeout(() => (processed_copied = false), 2000)
-    } catch (/** @type {unknown} */ err) {
-        console.error('Failed to copy processed text:', err)
-        error = 'فشل نسخ النص المعالج إلى الحافظة'
-    }
+    await navigator.clipboard.writeText(processed_result)
+    processed_copied = true
+    setTimeout(() => (processed_copied = false), 2000)
 }
 
 function clear_audio_file() {
@@ -515,69 +505,38 @@ function clear_audio_file() {
     processed_result = ''
     processing_type = null
     estimated_duration = null
-
-    if (fileInput) fileInput.value = ''
 }
 
-/**
- * @param {number} bytes
- */
-function format_file_size(bytes) {
-    if (bytes < 1024) return bytes + ' bytes'
-    else if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
-    else return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
-}
-
-async function start_transcription() {
+const start_transcription = async () => {
     if (!audio_file) return
 
     error = ''
     is_transcribing = true
     transcription_result = ''
 
-    try {
-        const options = {}
-        if (language) options.language = language
-        if (prompt_text) options.prompt = prompt_text
+    const options = {}
+    if (language) options.language = language
+    if (prompt_text) options.prompt = prompt_text
 
-        transcription_result = await transcribe_audio(audio_file, options)
-    } catch (/** @type {unknown} */ err) {
-        console.error('Transcription error:', err)
-        error = err instanceof Error ? err.message : 'حدث خطأ أثناء تحويل الصوت إلى نص'
-        transcription_result = ''
-    } finally {
-        is_transcribing = false
-    }
+    transcription_result = await transcribe_audio(audio_file, options)
+    is_transcribing = false
 }
 
-async function copy_to_clipboard() {
+const copy_to_clipboard = async () => {
     if (!transcription_result) return
 
-    try {
-        await navigator.clipboard.writeText(transcription_result)
-        copied = true
-        setTimeout(() => (copied = false), 2000)
-    } catch (/** @type {unknown} */ err) {
-        console.error('Failed to copy text:', err)
-        error = 'فشل نسخ النص إلى الحافظة'
-    }
+    await navigator.clipboard.writeText(transcription_result)
+    copied = true
+    setTimeout(() => (copied = false), 2000)
 }
 
-async function add_diacritics_to_text() {
+const add_diacritics_to_text = async () => {
     if (!transcription_result) return
 
-    const original_text = transcription_result
     is_diacritics_processing = true
     error = ''
 
-    try {
-        transcription_result = await add_diacritics(transcription_result)
-    } catch (/** @type {unknown} */ err) {
-        console.error('Error adding diacritics:', err)
-        error = err instanceof Error ? err.message : 'حدث خطأ أثناء إضافة التشكيل'
-        transcription_result = original_text
-    } finally {
-        is_diacritics_processing = false
-    }
+    transcription_result = await add_diacritics(transcription_result)
+    is_diacritics_processing = false
 }
 </script>

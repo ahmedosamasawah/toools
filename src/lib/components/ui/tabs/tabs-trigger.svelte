@@ -4,16 +4,16 @@
         className,
     )}
     {value}
-    {...$$restProps}
+    {...rest}
     on:click
 >
-    <slot />
+    {@render children?.()}
 </TabsPrimitive.Trigger>
 
 <script>
 import {Tabs as TabsPrimitive} from 'bits-ui'
+
 import {cn} from '$lib/utils.js'
-let className = undefined
-export let value
-export {className as class}
+
+let {class: className = undefined, value, children, ...rest} = $props()
 </script>
