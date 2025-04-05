@@ -4,7 +4,7 @@
         className,
     )}
     {value}
-    {...rest}
+    {...$$restProps}
     on:click
     on:keydown
     on:focusin
@@ -18,14 +18,14 @@
             <Circle class="h-2 w-2 fill-current" />
         </DropdownMenuPrimitive.RadioIndicator>
     </span>
-    {@render children?.()}
+    <slot />
 </DropdownMenuPrimitive.RadioItem>
 
 <script>
-import Circle from '@lucide/svelte/icons/circle'
 import {DropdownMenu as DropdownMenuPrimitive} from 'bits-ui'
-
+import Circle from '@lucide/svelte/icons/circle'
 import {cn} from '$lib/utils.js'
-
-let {class: className = undefined, value, children, ...rest} = $props()
+let className = undefined
+export let value
+export {className as class}
 </script>

@@ -2,7 +2,6 @@
     <textarea
         dir="rtl"
         bind:value={text}
-        oninput={handle_text_input}
         placeholder="أدخل النص هنا..."
         class="min-h-32 w-full rounded-md border border-gray-300 p-2 font-mono text-base"
     ></textarea>
@@ -98,65 +97,39 @@
 </div>
 
 <script>
-import {SlidersVertical, Undo} from '@steeze-ui/lucide-icons'
-import {Icon} from '@steeze-ui/svelte-icon'
+import {onMount} from 'svelte'
 import {slide} from 'svelte/transition'
-
-import {text_area_store} from '../stores.svelte.js'
+import {Icon} from '@steeze-ui/svelte-icon'
 import replacements from '../util/replacements.js'
+import {Undo, SlidersVertical} from '@steeze-ui/lucide-icons'
 
 /** @typedef {(substring: string, ...args: string[]) => string} ReplaceFunction */
 /** @typedef {[RegExp, string | ReplaceFunction]} ReplacementPair */
 /** @typedef {[string, ReplacementPair | ReplacementPair[], number?]} ReplacementRule */
 /** @typedef {[string, ReplacementRule[]]} ReplacementGroup */
 
-/**
- * @typedef {Object} Props
- * @property {(message: string) => void} show_notification
- */
-
-/** @type {Props} */
-let {show_notification} = $props()
-const EDITOR_ID = 'text-cleaner'
-
-// Get the stored text value through the store
-const stored_text = text_area_store.get_text(EDITOR_ID)
+/** @type {(message: string) => void} */
+export let show_notification
 
 /** @type {string} */
-let text = $derived($stored_text)
+let text = ''
 /** @type {string[]} */
-let undo_stack = $state([])
+let undo_stack = []
 /** @type {boolean} */
-let options_open = $state(false)
+let options_open = false
 /** @type {boolean} */
-let enhancement_options_open = $state(false)
+let enhancement_options_open = false
 /** @type {Record<string, boolean>} */
-let replacement_options = $state(init_replacement_options())
+let replacement_options = {}
 
-/**
- * @param {Event} event
- */
-function handle_text_input(event) {
-    if (event.target instanceof HTMLTextAreaElement) {
-        text = event.target.value
-        text_area_store.update(EDITOR_ID, text)
-    }
-}
-
-/**
- * @returns {Record<string, boolean>}
- */
 function init_replacement_options() {
-    /** @type {Record<string, boolean>} */
-    const options = {}
     /** @type {ReplacementGroup[]} */
     const typed_replacements = replacements
     typed_replacements.forEach(([_, rules]) =>
         rules.forEach(([name, _, enabled]) => {
-            options[name] = enabled !== 0
+            replacement_options[name] = enabled !== 0
         }),
     )
-    return options
 }
 
 /** @type {[string, ReplacementPair[]][]} */
@@ -186,7 +159,7 @@ function process_text() {
     /** @type {ReplacementGroup[]} */
     const typed_replacements = replacements
     typed_replacements.forEach(([_, rules]) => {
-        rules.forEach(([name, pattern]) => {
+        rules.forEach(([name, pattern, enabled]) => {
             if (replacement_options[name]) {
                 const pairs = /** @type {ReplacementPair[]} */ (
                     Array.isArray(pattern[0]) ? pattern : [pattern]
@@ -206,7 +179,6 @@ function process_text() {
     })
 
     text = processed_text
-    text_area_store.update(EDITOR_ID, text)
     copy_to_clipboard(processed_text)
 }
 
@@ -226,7 +198,6 @@ function apply_action([_, patterns]) {
     })
 
     text = processed_text
-    text_area_store.update(EDITOR_ID, text)
     copy_to_clipboard(processed_text)
 }
 
@@ -238,19 +209,18 @@ function copy_to_clipboard(text) {
 }
 
 /**
- * @param {string} current_text
+ * @param {string} currentText
  */
-function add_to_undo_stack(current_text) {
-    undo_stack = [...undo_stack, current_text].slice(-10)
+function add_to_undo_stack(currentText) {
+    undo_stack = [...undo_stack, currentText].slice(-10)
 }
 
 function undo() {
     if (undo_stack.length > 0) {
-        const last_text = undo_stack.pop()
-        if (last_text) {
+        const lastText = undo_stack.pop()
+        if (lastText) {
             undo_stack = [...undo_stack]
-            text = last_text
-            text_area_store.update(EDITOR_ID, text)
+            text = lastText
         }
     }
 }
@@ -262,6 +232,8 @@ function undo() {
 function format_arrow(text) {
     return text.replace(/➔/g, '<span class="arrow">➔</span>')
 }
+
+onMount(() => init_replacement_options())
 </script>
 
 <style>

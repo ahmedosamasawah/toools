@@ -1,20 +1,14 @@
-<svelte:element
-    this={level}
-    class={cn('mb-1 leading-none font-medium tracking-tight', className)}
-    {...rest}
->
-    {@render children?.()}
-</svelte:element>
-
 <script>
-import {cn} from '$lib/utils.js'
-/**
- * @typedef {Object} Props
- * @property {any} [class]
- * @property {string} [level]
- * @property {import('svelte').Snippet} [children]
- */
-
-/** @type {Props & { [key: string]: any }} */
-let {class: className = undefined, level = 'h5', children, ...rest} = $props()
+	import { cn } from "$lib/utils.js";
+	let className = undefined;
+	export let level = "h5";
+	export { className as class };
 </script>
+
+<svelte:element
+	this={level}
+	class={cn("mb-1 font-medium leading-none tracking-tight", className)}
+	{...$$restProps}
+>
+	<slot />
+</svelte:element>

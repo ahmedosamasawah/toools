@@ -95,17 +95,18 @@
 </div>
 
 <script>
-import {InfoIcon, RotateCcw, Save} from '@lucide/svelte'
 import {onMount} from 'svelte'
+import {InfoIcon} from '@lucide/svelte'
+import {Save, RotateCcw} from '@lucide/svelte'
+import {Button} from '$lib/components/ui/button'
+import {Textarea} from '$lib/components/ui/textarea'
+import {Tabs, TabsList, TabsTrigger, TabsContent} from '$lib/components/ui/tabs'
 
-import {Button} from '$lib/components/ui/button/index.js'
-import {Tabs, TabsContent, TabsList, TabsTrigger} from '$lib/components/ui/tabs/index.js'
-import {Textarea} from '$lib/components/ui/textarea/index.js'
 import {
     custom_prompts,
-    get_default_prompt,
     reset_all_prompts,
     save_custom_prompt,
+    get_default_prompt,
 } from '$lib/stores/prompts.js'
 
 const {show_notification = /** @type {(message: string, type?: string) => void} */ (() => {})} =

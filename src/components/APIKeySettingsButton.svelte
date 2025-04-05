@@ -114,14 +114,13 @@
 </Dialog.Root>
 
 <script>
-import {Eye, EyeOff, KeyRound} from '@lucide/svelte'
 import {onMount} from 'svelte'
-
+import {Eye, EyeOff, KeyRound} from '@lucide/svelte'
+import {Input} from '$lib/components/ui/input/index.js'
 import {Button} from '$lib/components/ui/button/index.js'
 import * as Dialog from '$lib/components/ui/dialog/index.js'
-import {Input} from '$lib/components/ui/input/index.js'
-import {Tabs, TabsContent, TabsList, TabsTrigger} from '$lib/components/ui/tabs/index.js'
-import {has_api_key, init_api_keys, save_api_key} from '$lib/utils/api-keys.js'
+import {init_api_keys, save_api_key, has_api_key} from '$lib/utils/api-keys.js'
+import {Tabs, TabsList, TabsTrigger, TabsContent} from '$lib/components/ui/tabs/index.js'
 
 /**
  * @typedef {'gemini' | 'openai'} api_key_type

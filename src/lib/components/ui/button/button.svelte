@@ -2,36 +2,24 @@
     {builders}
     class={cn(buttonVariants({variant, size, className}), 'flex cursor-pointer items-center')}
     type="button"
-    {...rest}
+    {...$$restProps}
     on:click
     on:keydown
 >
-    {@render children?.()}
+    <slot />
 </ButtonPrimitive.Root>
 
 <script>
+import {cn} from '$lib/utils.js'
+import {buttonVariants} from './index.js'
 import {Button as ButtonPrimitive} from 'bits-ui'
 
-import {cn} from '$lib/utils.js'
-
-import {buttonVariants} from './index.js'
-
-/**
- * @typedef {Object} Props
- * @property {any} [class]
- * @property {'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link'} [variant]
- * @property {'default' | 'sm' | 'lg' | 'icon'} [size]
- * @property {import('bits-ui').Builder[]} [builders]
- * @property {import('svelte').Snippet} [children]
- */
-
-/** @type {Props & { [key: string]: any }} */
-let {
-    class: className = undefined,
-    variant = 'default',
-    size = 'default',
-    builders = [],
-    children,
-    ...rest
-} = $props()
+let className = undefined
+/** @type {'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link'} */
+export let variant = 'default'
+/** @type {'default' | 'sm' | 'lg' | 'icon'} */
+export let size = 'default'
+/** @type {import('bits-ui').Builder[]} */
+export let builders = []
+export {className as class}
 </script>

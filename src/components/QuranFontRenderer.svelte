@@ -85,23 +85,20 @@
 </Tabs>
 
 <script>
-import {Copy} from '@steeze-ui/lucide-icons'
 import {Icon} from '@steeze-ui/svelte-icon'
-
-import {Button} from '$ui/button/index.js'
-import {Card, CardContent, CardHeader, CardTitle} from '$ui/card/index.js'
-import {Input} from '$ui/input/index.js'
-import {Label} from '$ui/label/index.js'
-import {Tabs, TabsContent, TabsList, TabsTrigger} from '$ui/tabs/index.js'
-import {Textarea} from '$ui/textarea/index.js'
+import {Copy} from '@steeze-ui/lucide-icons'
+import {Input} from '../lib/components/ui/input'
+import {Label} from '../lib/components/ui/label'
+import {Button} from '../lib/components/ui/button'
+import {Textarea} from '../lib/components/ui/textarea'
+import {Card, CardContent, CardHeader, CardTitle} from '../lib/components/ui/card'
+import {Tabs, TabsList, TabsTrigger, TabsContent} from '../lib/components/ui/tabs'
 
 /**
- * @typedef {Object} Props
- * @property {any} [show_notification]
+ * @param {string} message
+ * @param {string} [type='default']
  */
-
-/** @type {Props} */
-let {show_notification = () => {}} = $props()
+export let show_notification = /** @type {(message: string, type?: string) => void} */ (() => {})
 
 const font_configs = [
     {
@@ -120,18 +117,18 @@ const font_configs = [
     },
 ]
 
-let font_page = $state(1)
+let font_page = 1
 let loaded_fonts = new Set()
 /** @type {string | undefined} */
-let current_font = $state('hafs-new')
-let text = $state('بِسۡمِ ٱللَّهِ ٱلرَّحۡمَـٰنِ ٱلرَّحِیمِ')
+let current_font = 'hafs-new'
+let text = 'بِسۡمِ ٱللَّهِ ٱلرَّحۡمَـٰنِ ٱلرَّحِیمِ'
 
-let font_error = $state(false)
-let font_loading = $state(false)
+let font_error = false
+let font_loading = false
 
-let font_config = $derived(font_configs.find(f => f.id === current_font) || font_configs[0])
-let formatted_page = $derived(String(font_page).padStart(3, '0'))
-let font_family = $derived(`${font_config.prefix}${formatted_page}`)
+$: font_config = font_configs.find(f => f.id === current_font) || font_configs[0]
+$: formatted_page = String(font_page).padStart(3, '0')
+$: font_family = `${font_config.prefix}${formatted_page}`
 
 async function load_font() {
     if (loaded_fonts.has(font_family)) return show_notification('تم تحميل الخط بالفعل', 'info')

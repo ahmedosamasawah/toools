@@ -68,29 +68,25 @@
 </Tabs>
 
 <script>
-import {Copy} from '@steeze-ui/lucide-icons'
+import Char from './Char.svelte'
 import {Icon} from '@steeze-ui/svelte-icon'
-
-import {Button} from '$ui/button/index.js'
-import {Card, CardContent, CardHeader, CardTitle} from '$ui/card/index.js'
-import {Tabs, TabsContent, TabsList, TabsTrigger} from '$ui/tabs/index.js'
-import {Textarea} from '$ui/textarea/index.js'
-
-import Char from '../components/Char.svelte'
+import {Copy} from '@steeze-ui/lucide-icons'
+import {Button} from '../lib/components/ui/button'
+import {Textarea} from '../lib/components/ui/textarea'
+import {Card, CardContent, CardHeader, CardTitle} from '../lib/components/ui/card'
+import {Tabs, TabsList, TabsTrigger, TabsContent} from '../lib/components/ui/tabs'
 
 /**
- * @typedef {Object} Props
- * @property {any} [show_notification]
+ * @param {string} message
+ * @param {string} [type='default']
  */
-
-/** @type {Props} */
-let {show_notification = () => {}} = $props()
+export let show_notification = /** @type {(message: string, type?: string) => void} */ (() => {})
 
 /** @type {string} */
-let text = $state('بِسۡمِ ٱللَّهِ ٱلرَّحۡمَـٰنِ ٱلرَّحِیمِ')
+let text = 'بِسۡمِ ٱللَّهِ ٱلرَّحۡمَـٰنِ ٱلرَّحِیمِ'
 
 /** @type {string | undefined} */
-let current_tab = $state('character-analysis')
+let current_tab = 'character-analysis'
 
 /**
  * @param {string} char
