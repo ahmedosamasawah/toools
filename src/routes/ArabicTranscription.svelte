@@ -1,3 +1,7 @@
+<svelte:head>
+    <title>نسخ الحروف | أدوات نصية</title>
+</svelte:head>
+
 <div class="space-y-4">
     <div class="flex items-center justify-between">
         <h3 class="text-lg font-medium">نسخ الحروف العربية</h3>
@@ -15,7 +19,7 @@
                 id="arabic-text"
                 bind:value={arabic_text}
                 class="font-arabic min-h-32"
-                oninput={update_transcription}
+                oninput={handle_text_input}
                 placeholder="أدخل النص العربي هنا..."
             />
         </div>
@@ -63,9 +67,9 @@
                         <div class="flex items-center space-x-2 space-x-reverse">
                             <Switch
                                 id="dmg-standard"
-                                checked={use_DMG_standard}
+                                checked={use_dmg_standard}
                                 onCheckedChange={(/** @type {boolean} */ val) => {
-                                    use_DMG_standard = val
+                                    use_dmg_standard = val
                                     update_transcription()
                                 }}
                             />
@@ -113,28 +117,41 @@
 </div>
 
 <script>
-import {onMount} from 'svelte'
-import {Icon} from '@steeze-ui/svelte-icon'
-import {Copy} from '@steeze-ui/lucide-icons'
-import {Label} from '../lib/components/ui/label'
-import {Button} from '../lib/components/ui/button'
-import {Switch} from '../lib/components/ui/switch'
-import {Textarea} from '../lib/components/ui/textarea'
 import ChevronDown from '@lucide/svelte/icons/chevron-down'
-import {Card, CardContent, CardHeader, CardTitle} from '../lib/components/ui/card'
-import {Collapsible, CollapsibleContent, CollapsibleTrigger} from '../lib/components/ui/collapsible'
+import {Copy} from '@steeze-ui/lucide-icons'
+import {Icon} from '@steeze-ui/svelte-icon'
+
+import {Button} from '$ui/button/index.js'
+import {Card, CardContent, CardHeader, CardTitle} from '$ui/card/index.js'
+import {Collapsible, CollapsibleContent, CollapsibleTrigger} from '$ui/collapsible/index.js'
+import {Label} from '$ui/label/index.js'
+import {Switch} from '$ui/switch/index.js'
+import {Textarea} from '$ui/textarea/index.js'
+
+import {text_area_store} from '../stores.svelte.js'
 
 /**
- * @param {string} message
- * @param {string} [type='default']
+ * @typedef {Object} Props
+ * @property {any} [show_notification]
  */
-export let show_notification = /** @type {(message: string, type?: string) => void} */ (() => {})
 
-let is_open = false
-let arabic_text = ''
-let transcription_text = ''
-let use_DMG_standard = false
-let include_diacritics = true
+/** @type {Props} */
+let {show_notification = () => {}} = $props()
+
+const TEXT_KEY = 'arabic-transcription'
+
+const stored_arabic_text = text_area_store.get_text(TEXT_KEY)
+
+let is_open = $state(false)
+let arabic_text = $derived($stored_arabic_text)
+let transcription_text = $derived(transliterate(arabic_text))
+let use_dmg_standard = $state(false)
+let include_diacritics = $state(true)
+
+$effect(() => {
+    transcription_text = transliterate(arabic_text)
+})
+
 /**
  * @type {{[key: string]: {standard: string, dmg: string}}}
  */
@@ -187,19 +204,26 @@ const transliteration_map = {
 }
 
 /**
+ * @param {{ target: { value: string; }; }} event
+ */
+function handle_text_input(event) {
+    arabic_text = event.target.value
+    text_area_store.update(TEXT_KEY, arabic_text)
+}
+
+/**
  * @param {string} text
  * @returns {string}
  */
 function transliterate(text) {
     let result = ''
-    let prevChar = ''
 
     for (let i = 0; i < text.length; i++) {
         const char = text[i]
         const next_char = text[i + 1] || ''
 
         if (transliteration_map[char]) {
-            const method = use_DMG_standard ? 'dmg' : 'standard'
+            const method = use_dmg_standard ? 'dmg' : 'standard'
 
             if (next_char === 'ّ') {
                 if (transliteration_map[char]) result += transliteration_map[char][method]
@@ -213,8 +237,6 @@ function transliterate(text) {
             result += transliteration_map[char][method]
         } else if (char === ' ' || char === '\n' || char === '\t') result += char
         else result += char
-
-        prevChar = char
     }
 
     return result
@@ -229,6 +251,4 @@ function copy_transcription_to_clipboard() {
         .writeText(transcription_text)
         .then(() => show_notification('تم نسخ النص المنسوخ', 'success'))
 }
-
-onMount(() => update_transcription())
 </script>

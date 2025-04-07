@@ -7,10 +7,10 @@
 </div>
 
 <script>
-import {Icon} from '@steeze-ui/svelte-icon'
 import {Copy} from '@steeze-ui/lucide-icons'
-import {Button} from '../lib/components/ui/button'
+import {Icon} from '@steeze-ui/svelte-icon'
 
-export let char
-export let on_copy
+import {Button} from '$ui/button/index.js'
+
+let {char, on_copy} = $props()
 </script>

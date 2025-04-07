@@ -69,23 +69,23 @@
 </div>
 
 <script>
+import {AlertCircle, Eye, EyeOff, HelpCircle} from '@lucide/svelte'
 import {onMount} from 'svelte'
-import {HelpCircle} from '@lucide/svelte'
 
+import {Alert, AlertDescription, AlertTitle} from '$lib/components/ui/alert/index.js'
+import {Badge} from '$lib/components/ui/badge/index.js'
+import {Button} from '$lib/components/ui/button/index.js'
 import {
     Collapsible,
-    CollapsibleTrigger,
     CollapsibleContent,
+    CollapsibleTrigger,
 } from '$lib/components/ui/collapsible/index.js'
-import GeminiKeyGuide from './GeminiKeyGuide.svelte'
-import OpenAIKeyGuide from './OpenAIKeyGuide.svelte'
-import {AlertCircle, Eye, EyeOff} from '@lucide/svelte'
-import {Badge} from '$lib/components/ui/badge/index.js'
 import {Input} from '$lib/components/ui/input/index.js'
 import {Label} from '$lib/components/ui/label/index.js'
-import {Button} from '$lib/components/ui/button/index.js'
-import {save_api_key, get_api_key} from '$lib/utils/api-keys.js'
-import {Alert, AlertTitle, AlertDescription} from '$lib/components/ui/alert/index.js'
+import {get_api_key, save_api_key} from '$lib/utils/api-keys.js'
+
+import GeminiKeyGuide from './GeminiKeyGuide.svelte'
+import OpenAIKeyGuide from './OpenAIKeyGuide.svelte'
 
 /**
  * @typedef {'gemini' | 'openai'} api_key_type

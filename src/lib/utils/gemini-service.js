@@ -77,10 +77,7 @@ export async function process_with_gemini(prompt, text) {
     }
 }
 
-/**
- * @param {string} text
- * @returns {Promise<string>}
- */
+/** @param {string} text */
 export async function format_text(text) {
     const prompts = get(custom_prompts)
     const prompt = prompts.format_text
@@ -88,10 +85,7 @@ export async function format_text(text) {
     return process_with_gemini(prompt, text)
 }
 
-/**
- * @param {string} text
- * @returns {Promise<string>}
- */
+/** @param {string} text */
 export async function add_diacritics(text) {
     const prompts = get(custom_prompts)
     const prompt = prompts.add_diacritics
@@ -99,10 +93,7 @@ export async function add_diacritics(text) {
     return process_with_gemini(prompt, text)
 }
 
-/**
- * @param {string} text
- * @returns {Promise<string>}
- */
+/** @param {string} text */
 export async function enhance_ocr_text(text) {
     const prompts = get(custom_prompts)
     const prompt = prompts.enhance_ocr
@@ -110,10 +101,7 @@ export async function enhance_ocr_text(text) {
     return process_with_gemini(prompt, text)
 }
 
-/**
- * @param {string} text
- * @returns {Promise<string>}
- */
+/** @param {string} text */
 export async function summarize_text(text) {
     const prompts = get(custom_prompts)
     const prompt = prompts.summarize_text
@@ -130,16 +118,12 @@ export async function translate_text(text, target_language = 'English') {
     const prompts = get(custom_prompts)
     let prompt = prompts.translate_text
 
-    // Replace placeholder with target language
     prompt = prompt.replace('TARGET_LANGUAGE', target_language)
 
     return process_with_gemini(prompt, text)
 }
 
-/**
- * @param {string} text
- * @returns {Promise<string>}
- */
+/** @param {string} text */
 export async function create_task_list(text) {
     const prompts = get(custom_prompts)
     const prompt = prompts.create_task_list
@@ -161,7 +145,6 @@ export async function enhance_pdf_ocr_text(
     const prompts = get(custom_prompts)
     let prompt = prompts.enhance_ocr
 
-    // Add custom instructions based on options
     if (options.fix_layout) {
         prompt += `
     ٤. إعادة بناء هيكل الفقرات بشكل صحيح
@@ -169,14 +152,12 @@ export async function enhance_pdf_ocr_text(
     `
     }
 
-    if (options.add_diacritics) {
+    if (options.add_diacritics)
         prompt += `
     ${options.fix_layout ? '٦' : '٤'}. إضافة التشكيل المناسب للنص العربي حيث يلزم
     `
-    }
 
     prompt += `
-    
     أعد النص المحسن فقط، بدون أي شروحات أو نصوص إضافية.
     `
 

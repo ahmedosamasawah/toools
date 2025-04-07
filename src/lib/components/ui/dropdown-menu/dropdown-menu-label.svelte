@@ -1,14 +1,14 @@
 <DropdownMenuPrimitive.Label
     class={cn('px-2 py-1.5 text-sm font-semibold', inset && 'pl-8', className)}
-    {...$$restProps}
+    {...rest}
 >
-    <slot />
+    {@render children?.()}
 </DropdownMenuPrimitive.Label>
 
 <script>
 import {DropdownMenu as DropdownMenuPrimitive} from 'bits-ui'
+
 import {cn} from '$lib/utils.js'
-let className = undefined
-export let inset = undefined
-export {className as class}
+
+let {class: className = undefined, inset = undefined, children, ...rest} = $props()
 </script>

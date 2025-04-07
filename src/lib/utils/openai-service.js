@@ -1,80 +1,67 @@
 import {get_api_key} from './api-keys.js'
 
 /**
- * Transcribe audio using OpenAI's Whisper API
  * @param {File} audio_file
  * @param {Object} options
+ * @param {string} options.model
  * @param {string} options.prompt
  * @param {string} options.language
  * @returns {Promise<string>}
  */
-export async function transcribe_audio(audio_file, options = {language: 'ar', prompt: ''}) {
+export async function transcribe_audio(
+    audio_file,
+    options = {language: 'ar', prompt: '', model: 'whisper-1'},
+) {
     const api_key = await get_api_key('openai')
-    if (!api_key) throw new Error('الرجاء إدخال مفتاح OpenAI API للمتابعة')
-
-    if (!api_key.startsWith('sk-'))
-        throw new Error('مفتاح API غير صالح. يجب أن يبدأ مفتاح OpenAI API بـ "sk-"')
+    if (!api_key || !api_key.startsWith('sk-')) throw new Error('مفتاح API غير صالح أو غير موجود')
 
     const form_data = new FormData()
     form_data.append('file', audio_file)
-    form_data.append('model', 'whisper-1')
-
+    form_data.append('model', options.model === 'gpt-4o' ? 'gpt-4o-transcribe' : 'whisper-1')
     if (options.prompt) form_data.append('prompt', options.prompt)
-    if (options.language) form_data.append('language', options.language)
+    if (options.language && options.model !== 'gpt-4o')
+        form_data.append('language', options.language)
 
     form_data.append('response_format', 'text')
 
-    try {
-        const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-            method: 'POST',
-            headers: {
-                Authorization: `Bearer ${api_key}`,
-            },
-            body: form_data,
-        })
+    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+        method: 'POST',
+        headers: {Authorization: `Bearer ${api_key}`},
+        body: form_data,
+    })
 
-        if (!response.ok) {
-            let error_message = 'حدث خطأ غير معروف أثناء الإتصال بخدمة OpenAI'
-
-            try {
-                const error_data = await response.json()
-                error_message = error_data.error?.message || error_message
-
-                if (error_message.includes('API key'))
-                    throw new Error(
-                        'مفتاح API غير صالح أو منتهي الصلاحية. الرجاء التحقق من مفتاح API الخاص بك.',
-                    )
-
-                if (error_message.includes('insufficient_quota'))
-                    throw new Error(
-                        'تجاوزت الحد المسموح به من الاستخدام. الرجاء ترقية حسابك أو الانتظار حتى يتم تجديد رصيدك.',
-                    )
-            } catch {
-                error_message = `خطأ: ${response.status} ${response.statusText}`
-            }
-
-            throw new Error(`خطأ في OpenAI API: ${error_message}`)
-        }
-
-        return await response.text()
-    } catch (error) {
-        if (
-            error instanceof Error &&
-            (error.message.startsWith('مفتاح API') || error.message.startsWith('خطأ في OpenAI API'))
-        )
-            throw error
-
-        throw new Error(
-            `فشل الاتصال بخدمة OpenAI: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        )
-    }
+    if (!response.ok) return handle_error_response(response)
+    return response.text()
 }
 
 /**
- * Helper to validate the file before sending to the API
- * @param {File} file - The audio file to validate
- * @returns {Object} - Validation result {valid: boolean, message: string}
+ * @param {Response} response
+ * @returns {Promise<string>}
  */
+async function handle_error_response(response) {
+    let error_message = 'حدث خطأ غير معروف أثناء الإتصال بخدمة OpenAI'
+
+    try {
+        const error_data = await response.json()
+        error_message = error_data.error?.message || error_message
+
+        if (error_message.includes('API key'))
+            throw new Error(
+                'مفتاح API غير صالح أو منتهي الصلاحية. الرجاء التحقق من مفتاح API الخاص بك.',
+            )
+
+        if (error_message.includes('insufficient_quota'))
+            throw new Error(
+                'تجاوزت الحد المسموح به من الاستخدام. الرجاء ترقية حسابك أو الانتظار حتى يتم تجديد رصيدك.',
+            )
+    } catch {
+        error_message = `خطأ: ${response.status} ${response.statusText}`
+    }
+
+    throw new Error(`خطأ في OpenAI API: ${error_message}`)
+}
+
+/** @param {File} file */
 export function validate_audio_file(file) {
     const valid_mime_types = [
         'audio/mp3',
@@ -134,12 +121,12 @@ export function validate_audio_file(file) {
 }
 
 /**
- * Get an estimate of the transcription cost
  * @param {File} file
- * @returns {Object}
+ * @param {string} model - 'whisper-1' or 'gpt-4o'
+ * @returns {{minutes: number, cost: number}}
  */
-export function estimate_transcription_cost(file) {
-    const price_per_minute = 0.006
+export function estimate_transcription_cost(file, model = 'whisper-1') {
+    const price_per_minute = model === 'gpt-4o' ? 0.015 : 0.006
 
     const avg_bitrate_kbps = 128
     const avg_bytes_per_second = (avg_bitrate_kbps * 1024) / 8

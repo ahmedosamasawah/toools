@@ -5,36 +5,45 @@
     )}
     bind:value
     {readonly}
-    on:blur
-    on:change
-    on:click
-    on:focus
-    on:focusin
-    on:focusout
-    on:keydown
-    on:keypress
-    on:keyup
-    on:mouseover
-    on:mouseenter
-    on:mouseleave
-    on:mousemove
-    on:paste
-    on:input
-    on:wheel|passive
-    {...$$restProps}
+    onblur={bubble('blur')}
+    onchange={bubble('change')}
+    onclick={bubble('click')}
+    onfocus={bubble('focus')}
+    onfocusin={bubble('focusin')}
+    onfocusout={bubble('focusout')}
+    onkeydown={bubble('keydown')}
+    onkeypress={bubble('keypress')}
+    onkeyup={bubble('keyup')}
+    onmouseover={bubble('mouseover')}
+    onmouseenter={bubble('mouseenter')}
+    onmouseleave={bubble('mouseleave')}
+    onmousemove={bubble('mousemove')}
+    onpaste={bubble('paste')}
+    oninput={bubble('input')}
+    use:passive={['wheel', () => bubble('wheel')]}
+    {...rest}
 />
 
 <script>
+import {createBubbler, passive} from 'svelte/legacy'
+
+const bubble = createBubbler()
 import {cn} from '$lib/utils.js'
 
 /** @type {string | undefined} */
-let className = undefined
 
-/** @type {any} */
-export let value = undefined
+/**
+ * @typedef {Object} Props
+ * @property {any} [class]
+ * @property {any} [value]
+ * @property {boolean | undefined} [readonly]
+ */
 
-export {className as class}
-
-/** @type {boolean | undefined} */
-export let readonly = undefined
+/** @type {Props & { [key: string]: any }} */
+let {
+    class: className = undefined,
+    value = $bindable(undefined),
+    readonly = undefined,
+    ...rest
+} = $props()
 </script>

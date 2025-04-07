@@ -5,25 +5,31 @@
     )}
     bind:value
     {readonly}
-    on:blur
-    on:change
-    on:click
-    on:focus
-    on:keydown
-    on:keypress
-    on:keyup
-    on:mouseover
-    on:mouseenter
-    on:mouseleave
-    on:paste
-    on:input
-    {...$$restProps}
+    onblur={bubble('blur')}
+    onchange={bubble('change')}
+    onclick={bubble('click')}
+    onfocus={bubble('focus')}
+    onkeydown={bubble('keydown')}
+    onkeypress={bubble('keypress')}
+    onkeyup={bubble('keyup')}
+    onmouseover={bubble('mouseover')}
+    onmouseenter={bubble('mouseenter')}
+    onmouseleave={bubble('mouseleave')}
+    onpaste={bubble('paste')}
+    oninput={bubble('input')}
+    {...rest}
 ></textarea>
 
 <script>
+import {createBubbler} from 'svelte/legacy'
+
+const bubble = createBubbler()
 import {cn} from '$lib/utils.js'
-let className = undefined
-export let value = undefined
-export {className as class}
-export let readonly = undefined
+
+let {
+    class: className = undefined,
+    value = $bindable(undefined),
+    readonly = undefined,
+    ...rest
+} = $props()
 </script>

@@ -1,10 +1,4 @@
-<Button
-    {variant}
-    {size}
-    class="gap-1 {class_name}"
-    onclick={() => (dialog_open = true)}
-    {...$$restProps}
->
+<Button {variant} {size} class="gap-1 {class_name}" onclick={() => (dialog_open = true)} {...rest}>
     <Settings class="h-4 w-4" />
     <span class="hidden md:inline">إعدادات الذكاء الاصطناعي</span>
 </Button>
@@ -13,23 +7,27 @@
 
 <script>
 import {Settings} from '@lucide/svelte'
+
 import {Button} from '$lib/components/ui/button/index.js'
+
 import AIPromptManagerDialog from './AIPromptManagerDialog.svelte'
 
 /**
- * @param {string} message
- * @param {string} [type='default']
+ * @typedef {Object} Props
+ * @property {any} [show_notification]
+ * @property {'sm' | 'default' | 'lg' | 'icon' | undefined} [size]
+ * @property {'outline' | 'default' | 'destructive' | 'secondary' | 'ghost' | 'link' | undefined} [variant]
+ * @property {string} [class_name]
  */
-export let show_notification = /** @type {(message: string, type?: string) => void} */ (() => {})
 
-/** @type {'sm' | 'default' | 'lg' | 'icon' | undefined} */
-export let size = 'sm'
+/** @type {Props & { [key: string]: any }} */
+let {
+    show_notification = () => {},
+    size = 'sm',
+    variant = 'outline',
+    class_name = '',
+    ...rest
+} = $props()
 
-/** @type {'outline' | 'default' | 'destructive' | 'secondary' | 'ghost' | 'link' | undefined} */
-export let variant = 'outline'
-
-/** @type {string} */
-export let class_name = ''
-
-let dialog_open = false
+let dialog_open = $state(false)
 </script>

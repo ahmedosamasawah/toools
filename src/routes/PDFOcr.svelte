@@ -1,3 +1,6 @@
+<svelte:head>
+    <title>استخراج النص من PDF | أدوات نصية</title>
+</svelte:head>
 <div class="space-y-6" dir="rtl">
     <RequireAPIKey api_key_type="gemini">
         <div class="space-y-5">
@@ -176,18 +179,20 @@
 </div>
 
 <script>
+import {AlertCircle, Check, Copy, FileSearch, FileText, Loader2, X} from '@lucide/svelte'
+import * as pdfjs from 'pdfjs-dist'
+
 import {RequireAPIKey} from '$lib/api/index.js'
+import {Alert, AlertDescription, AlertTitle} from '$lib/components/ui/alert/index.js'
+import {Button} from '$lib/components/ui/button/index.js'
+import {Card, CardContent, CardHeader, CardTitle} from '$lib/components/ui/card/index.js'
+import {Checkbox} from '$lib/components/ui/checkbox/index.js'
 import {Input} from '$lib/components/ui/input/index.js'
 import {Label} from '$lib/components/ui/label/index.js'
-import {Button} from '$lib/components/ui/button/index.js'
-import {Checkbox} from '$lib/components/ui/checkbox/index.js'
 import {enhance_ocr_text} from '$lib/utils/gemini-service.js'
-import {Alert, AlertTitle, AlertDescription} from '$lib/components/ui/alert/index.js'
-import {Card, CardHeader, CardTitle, CardContent} from '$lib/components/ui/card/index.js'
-import {Loader2, FileText, Upload, X, AlertCircle, FileSearch, Copy, Check} from '@lucide/svelte'
 
-import * as pdfjs from 'pdfjs-dist'
-import FileDropzone from './FileDropzone.svelte'
+import FileDropzone from '../components/FileDropzone.svelte'
+import {active_operations} from '../stores.svelte.js'
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
     'pdfjs-dist/build/pdf.worker.mjs',
@@ -204,7 +209,6 @@ let pdf_file = $state(null)
 /** @type {HTMLInputElement | null} */
 let file_input = null
 let file_error = $state('')
-let is_dragging = $state(false)
 
 // Processing states
 let is_processing = $state(false)
@@ -242,20 +246,9 @@ const MAX_CHUNK_SIZE = 20000 // Maximum text size for a single Gemini API call
 const tick = () => new Promise(resolve => setTimeout(resolve, 0))
 
 /**
- * Format file size to human-readable format
- * @param {number} bytes - File size in bytes
- */
-function format_file_size(bytes) {
-    if (bytes < 1024) return bytes + ' bytes'
-    else if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
-    else return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
-}
-
-/**
- * Parse page range string into array of page numbers
- * @param {string} range_str - Range string (e.g. "1-3,5,7-9")
- * @param {number} total_pages - Total number of pages in PDF
- * @returns {number[]} - Array of page numbers to process
+ * @param {string} range_str
+ * @param {number} total_pages
+ * @returns {number[]}
  */
 function parse_page_range(range_str, total_pages) {
     if (!range_str.trim()) return Array.from({length: total_pages}, (_, i) => i + 1)
@@ -284,27 +277,7 @@ function parse_page_range(range_str, total_pages) {
 // File handling functions
 //---------------------------------------------------------------
 
-/** @param {Event} event File input change event */
-function handle_file_select(event) {
-    /** @type {FileList | null} */
-    const files = /** @type {HTMLInputElement} */ (event.target).files
-    if (files && files.length > 0) process_selected_file(Array.from(files))
-}
-
-/** @param {DragEvent} event Drag event */
-function handle_drop_file(event) {
-    event.preventDefault()
-    is_dragging = false
-
-    const files = event.dataTransfer?.files
-    if (files && files.length > 0) process_selected_file(Array.from(files))
-}
-
-/**
- * Process and validate selected PDF file
- * @param {File[]} files - Selected files
- * @returns {File[]} - Accepted files
- */
+/** @param {File[]} files */
 function process_selected_file(files) {
     error = ''
     file_error = ''
@@ -321,7 +294,6 @@ function process_selected_file(files) {
     return files
 }
 
-/** Clear the selected PDF file */
 function clear_pdf_file() {
     file_error = ''
     pdf_file = null
@@ -333,43 +305,22 @@ function clear_pdf_file() {
     if (file_input) file_input.value = ''
 }
 
-/** Copy extracted text to clipboard */
 async function copy_to_clipboard() {
     if (!extracted_text) return
 
-    try {
-        await navigator.clipboard.writeText(extracted_text)
-        copied = true
-        setTimeout(() => (copied = false), 2000)
-    } catch (/** @type {unknown} */ err) {
-        console.error('Failed to copy text:', err)
-        error = 'فشل نسخ النص إلى الحافظة'
-    }
+    await navigator.clipboard.writeText(extracted_text)
+    copied = true
+    setTimeout(() => (copied = false), 2000)
 }
 
 //---------------------------------------------------------------
 // Text processing functions
 //---------------------------------------------------------------
 
-/**
- * Process extracted text with Gemini API
- * @param {string} text - Text to process
- * @returns {Promise<string>} - Enhanced text
- */
-async function process_extracted_text(text) {
-    try {
-        return await enhance_ocr_text(text)
-    } catch (/** @type {unknown} */ err) {
-        console.error('Error processing text with Gemini:', err)
-        return text
-    }
-}
+/** @param {string} text */
+const process_extracted_text = async text => await enhance_ocr_text(text)
 
-/**
- * Process large text in chunks to avoid API limits
- * @param {string} text - Text to process in chunks
- * @returns {Promise<string>} - Combined processed text
- */
+/** @param {string} text */
 async function process_text_in_chunks(text) {
     if (text.length <= MAX_CHUNK_SIZE) {
         total_chunks = 1
@@ -420,11 +371,9 @@ async function process_text_in_chunks(text) {
 // Main PDF processing function
 //---------------------------------------------------------------
 
-/** Extract text from PDF file */
 async function extract_text_from_pdf() {
     if (!pdf_file) return
 
-    // Reset states
     error = ''
     total_pages = 0
     total_chunks = 0
@@ -434,6 +383,8 @@ async function extract_text_from_pdf() {
     processed_chunks = 0
     pages_to_process = []
     processing_phase = 'extracting'
+
+    active_operations.update(n => n + 1)
 
     try {
         const pdf = await pdfjs.getDocument({url: URL.createObjectURL(pdf_file)}).promise
@@ -469,6 +420,7 @@ async function extract_text_from_pdf() {
     } finally {
         processing_phase = 'idle'
         is_processing = false
+        active_operations.update(n => n - 1)
     }
 }
 </script>

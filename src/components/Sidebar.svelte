@@ -1,138 +1,165 @@
-<aside
-    class={{
-        'bg-card h-screen overflow-hidden border-x transition-all duration-300 ease-in-out': true,
-        'fixed z-50 w-full md:relative md:w-64': sidebar_tab_state.is_expanded,
-        'w-16': !sidebar_tab_state.is_expanded,
-    }}
-    style="flex-shrink: 0;"
->
-    <div class="flex h-full flex-col">
-        <div
-            class={{
-                'flex items-center justify-between border-b p-4': true,
-                'gap-4': sidebar_tab_state.is_expanded,
-            }}
-        >
-            <div class="flex-1 overflow-hidden">
-                {#if sidebar_tab_state.is_expanded}
-                    <h1
-                        class="text-card-foreground animate-fade-in text-xl font-semibold whitespace-nowrap"
-                    >
-                        أدوات نصية
-                    </h1>
-                {/if}
+<div>
+    <Sidebar.Root
+        class={`bg-card z-50 h-screen overflow-hidden border-x ${sidebar_state.is_expanded ? 'w-full md:w-52 lg:w-60' : 'w-16'}`}
+        style="flex-shrink: 0;"
+    >
+        <Sidebar.Content class="flex h-full flex-col">
+            <div
+                class={[
+                    'flex flex-wrap items-center justify-between gap-2 border-b p-4',
+                    sidebar_state.is_expanded && 'gap-4',
+                ]}
+            >
+                <Button
+                    size="icon"
+                    variant="ghost"
+                    onclick={handle_toggle}
+                    class="hover:bg-muted flex-shrink-0 justify-center"
+                    aria-label={sidebar_state.is_expanded ? 'Collapse sidebar' : 'Expand sidebar'}
+                >
+                    {#if sidebar_state.is_expanded}
+                        <ChevronLeft class="h-5 w-5 md:block" />
+                    {:else}
+                        <ChevronRight class="h-5 w-5" />
+                    {/if}
+                </Button>
+
+                <GlobalSettingsButton {show_notification} />
             </div>
-
-            <Button size="icon" variant="ghost" onclick={handle_toggle} class="flex-shrink-0">
-                {#if sidebar_tab_state.is_expanded}
-                    <ChevronRight class="h-5 w-5 md:block" />
-                {:else}
-                    <ChevronLeft class="h-5 w-5" />
-                {/if}
-            </Button>
-        </div>
-
-        <nav class="flex-grow overflow-y-auto p-2">
-            <div class="space-y-1">
-                {#each navigation_items as item}
-                    <Button
-                        variant={sidebar_tab_state.current_tab === item.id ? 'secondary' : 'ghost'}
-                        class={{
-                            'h-10 w-full overflow-hidden': true,
-                            'justify-start text-right': sidebar_tab_state.is_expanded,
-                            'justify-center': !sidebar_tab_state.is_expanded,
-                        }}
-                        onclick={() => change_tab(item.id)}
-                        title={item.label}
-                    >
-                        <item.icon
-                            class={{'h-5 w-5': true, 'ml-2': sidebar_tab_state.is_expanded}}
-                        />
-                        {#if sidebar_tab_state.is_expanded}
-                            <span
-                                class="overflow-hidden text-ellipsis whitespace-nowrap transition-opacity duration-150"
-                                >{item.label}</span
+            <Sidebar.Group class="">
+                <Sidebar.GroupContent class="scrollbar-thin flex-grow overflow-y-auto">
+                    <Sidebar.Menu class="space-y-2">
+                        {#each navigation_items as item}
+                            <Button
+                                variant={sidebar_state.current_tab === item.id
+                                    ? 'secondary'
+                                    : 'ghost'}
+                                class="hover:bg-muted/60 h-12 w-full overflow-hidden rounded-md px-4 transition-colors"
+                                onclick={() => change_tab(item.id)}
+                                title={item.label}
+                                aria-label={item.label}
+                                aria-current={sidebar_state.current_tab === item.id
+                                    ? 'page'
+                                    : undefined}
                             >
-                        {/if}
-                    </Button>
-                {/each}
-            </div>
-        </nav>
-
-        <div
-            class={{
-                'flex border-t p-4': true,
-                'justify-start': sidebar_tab_state.is_expanded,
-                'justify-center': !sidebar_tab_state.is_expanded,
-            }}
-        >
-            <GlobalSettingsButton {show_notification} />
-        </div>
-    </div>
-</aside>
-
-{#if !sidebar_tab_state.is_expanded}
-    <div class="fixed top-4 right-4 z-50 md:hidden">
-        <Button variant="outline" size="icon" onclick={handle_toggle}>
-            <Menu class="h-5 w-5" />
-        </Button>
-    </div>
-{/if}
-
-{#if sidebar_tab_state.is_expanded}
-    <div
-        tabindex="0"
-        role="button"
-        onclick={handle_toggle}
-        aria-label="Close sidebar"
-        class="fixed inset-0 z-40 bg-black/50 md:hidden"
-        onkeydown={e => (e.key === 'Enter' || e.key === ' ' ? handle_toggle() : null)}
-    ></div>
-{/if}
+                                <item.icon
+                                    class={[
+                                        'h-5 w-5 flex-shrink-0',
+                                        sidebar_state.is_expanded && 'ml-2',
+                                    ]}
+                                />
+                                {#if sidebar_state.is_expanded}
+                                    <span
+                                        class="overflow-hidden text-ellipsis whitespace-nowrap transition-opacity duration-150"
+                                        >{item.label}</span
+                                    >
+                                {/if}
+                            </Button>
+                        {/each}
+                    </Sidebar.Menu>
+                </Sidebar.GroupContent>
+            </Sidebar.Group>
+        </Sidebar.Content>
+    </Sidebar.Root>
+</div>
 
 <script>
 import {
-    Type,
-    Menu,
-    Split,
-    FileType,
-    Keyboard,
-    FileText,
-    TextQuote,
-    Headphones,
-    FileSearch,
     ChevronLeft,
     ChevronRight,
-    X,
+    FileSearch,
+    FileText,
+    FileType,
+    Headphones,
+    Home,
+    Keyboard,
+    Mic,
+    Split,
+    TextQuote,
+    Type,
 } from '@lucide/svelte'
+import * as kv from 'idb-keyval'
 
-import {Button} from '$lib/components/ui/button'
+import {Button} from '$lib/components/ui/button/index.js'
+import * as Sidebar from '$lib/components/ui/sidebar/index.js'
+
 import GlobalSettingsButton from './GlobalSettingsButton.svelte'
 
 const {
     is_expanded = false,
-    current_tab = 'text-cleaner',
+    current_tab = '',
     toggle_sidebar = /** @type {() => void} */ (() => {}),
     on_tab_change = /** @type {(tab: string) => void} */ (() => {}),
     show_notification = /** @type {(message: string, type?: string) => void} */ (() => {}),
 } = $props()
 
-let sidebar_tab_state = $state({
+const sidebar_state = $state({
     current_tab: current_tab,
     is_expanded: is_expanded,
 })
 
+/** @type {MediaQueryList|null} */
+let media_query = null
+let is_small_screen = $state(false)
+
+media_query = window.matchMedia('(max-width: 767px)')
+is_small_screen = media_query.matches
+media_query.addEventListener('change', handle_media_query_change)
+
+initialize_sidebar_state()
+
+async function initialize_sidebar_state() {
+    if (!is_small_screen) {
+        const saved_state = await load_sidebar_state()
+        if (saved_state !== null) {
+            sidebar_state.is_expanded = saved_state
+            if (saved_state !== is_expanded) {
+                toggle_sidebar()
+            }
+        }
+    } else if (is_small_screen && sidebar_state.is_expanded) {
+        sidebar_state.is_expanded = false
+    }
+}
+
+/**
+ * Load sidebar expanded state from idb-keyval
+ * @returns {Promise<boolean|null>} The saved state or null if not found
+ */
+async function load_sidebar_state() {
+    try {
+        const saved_value = await kv.get('sidebar_expanded')
+        return typeof saved_value === 'boolean' ? saved_value : null
+    } catch {
+        return null
+    }
+}
+
 $effect(() => {
-    sidebar_tab_state.current_tab = current_tab
-    sidebar_tab_state.is_expanded = is_expanded
+    if (!is_small_screen) {
+        sidebar_state.is_expanded = is_expanded
+    }
+    sidebar_state.current_tab = current_tab
 })
 
 $effect(() => {
-    if (sidebar_tab_state.current_tab !== current_tab) on_tab_change(sidebar_tab_state.current_tab)
+    if (sidebar_state.current_tab !== current_tab) {
+        if (!(sidebar_state.current_tab === '' && current_tab === '')) {
+            on_tab_change(sidebar_state.current_tab || '')
+        }
+    }
 })
 
+/**
+ * Handle sidebar toggle based on screen size
+ */
 function handle_toggle() {
-    toggle_sidebar()
+    if (!is_small_screen) {
+        toggle_sidebar()
+        kv.set('sidebar_expanded', !sidebar_state.is_expanded)
+    } else {
+        sidebar_state.is_expanded = !sidebar_state.is_expanded
+    }
 }
 
 /**
@@ -140,16 +167,35 @@ function handle_toggle() {
  * @param {string} tab
  */
 function change_tab(tab) {
-    sidebar_tab_state.current_tab = tab
+    sidebar_state.current_tab = tab
     on_tab_change(tab)
+}
 
-    // Auto-close sidebar on mobile after selecting a tab
-    if (window.innerWidth < 768 && sidebar_tab_state.is_expanded) {
-        toggle_sidebar()
+/**
+ * Handle media query changes for responsive design
+ * @param {{ matches: boolean; }} e
+ */
+async function handle_media_query_change(e) {
+    is_small_screen = e.matches
+
+    if (is_small_screen && sidebar_state.is_expanded) {
+        sidebar_state.is_expanded = false
+    } else if (!is_small_screen) {
+        const saved_state = await load_sidebar_state()
+        if (saved_state !== null) {
+            if (saved_state !== sidebar_state.is_expanded) {
+                sidebar_state.is_expanded = saved_state
+                toggle_sidebar()
+            }
+        } else {
+            sidebar_state.is_expanded = is_expanded
+        }
     }
 }
 
+/** @type {Array<{id: string, label: string, icon: any}>} */
 const navigation_items = [
+    {id: '', label: 'الرئيسية', icon: Home},
     {id: 'text-cleaner', label: 'تحسين النص', icon: TextQuote},
     {id: 'audio-transcription', label: 'تحويل الصوت', icon: Headphones},
     {id: 'text-formatting', label: 'معالجة النصوص', icon: FileText},
@@ -158,6 +204,7 @@ const navigation_items = [
     {id: 'unichar', label: 'تحليل الحروف', icon: Type},
     {id: 'diff-viewer', label: 'مقارنة النصوص', icon: Split},
     {id: 'quran-fonts', label: 'خطوط القرآن', icon: FileType},
+    {id: 'recorder', label: 'المسجل', icon: Mic},
 ]
 </script>
 
@@ -175,7 +222,38 @@ const navigation_items = [
     }
 }
 
+/* Improved scrollbar styling */
+.scrollbar-thin {
+    scrollbar-width: thin;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: rgba(155, 155, 155, 0.5);
+    border-radius: 20px;
+}
+
 :global(.transition-all) {
     transition-property: all;
+}
+
+/* Adjust for RTL layout */
+@media (min-width: 768px) {
+    body {
+        padding-right: 16rem;
+        padding-right: var(--sidebar-width, 16rem);
+        transition: padding-right 0.3s ease-in-out;
+    }
+
+    body.sidebar-collapsed {
+        padding-right: 4rem;
+    }
 }
 </style>

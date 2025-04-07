@@ -96,11 +96,13 @@
 
 <script>
 import {Settings} from '@lucide/svelte'
-import APIKeyDialog from './APIKeyDialog.svelte'
-import AIPromptManager from './AIPromptManager.svelte'
+
 import {Button} from '$lib/components/ui/button/index.js'
 import * as Dialog from '$lib/components/ui/dialog/index.js'
-import {Tabs, TabsList, TabsTrigger, TabsContent} from '$lib/components/ui/tabs/index.js'
+import {Tabs, TabsContent, TabsList, TabsTrigger} from '$lib/components/ui/tabs/index.js'
+
+import AIPromptManager from './AIPromptManager.svelte'
+import APIKeyDialog from './APIKeyDialog.svelte'
 
 let dialog_open = $state(false)
 let show_gemini_dialog = $state(false)
