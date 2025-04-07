@@ -142,8 +142,8 @@ let playback_rate = $state(1.0)
 let load_promise = $state(null)
 let {is_recording, recording} = $props()
 
-let is_currently_recording = is_recording
-let selected_recording = recording
+let is_currently_recording = $derived(is_recording)
+let selected_recording = $derived(recording)
 
 $effect(() => {
     playback_state.set({
@@ -181,6 +181,8 @@ $effect(() => {
 async function load_audio(rec) {
     if (!audio) return
 
+    const current_playback_rate = audio.playbackRate
+
     audio.pause()
     current_time = 0
     is_playing = false
@@ -189,10 +191,7 @@ async function load_audio(rec) {
 
     load_promise = new Promise(resolve => {
         const handle_loaded = () => {
-            if (audio.duration && audio.duration !== Infinity) {
-                duration = audio.duration
-                console.log('Audio metadata loaded. Duration:', duration)
-            }
+            if (audio.duration && audio.duration !== Infinity) duration = audio.duration
 
             audio.removeEventListener('loadedmetadata', handle_loaded)
             resolve()
@@ -202,7 +201,6 @@ async function load_audio(rec) {
 
         setTimeout(() => {
             if (load_promise) {
-                console.log('Metadata loading timed out. Using recording duration:', rec.duration)
                 duration = rec.duration || 0
                 resolve()
             }
@@ -210,7 +208,8 @@ async function load_audio(rec) {
     })
 
     audio.src = rec.url
-    audio.playbackRate = playback_rate
+    audio.playbackRate = current_playback_rate || playback_rate
+
     audio.load()
 }
 
@@ -252,8 +251,15 @@ function handle_seek(percentage) {
 
 /** @param {number} change */
 function change_playback_rate(change) {
-    playback_rate = Math.max(0.5, Math.min(2, playback_rate + change))
-    if (audio) audio.playbackRate = playback_rate
+    const currentPosition = audio.currentTime
+    const new_rate = Math.max(0.5, Math.min(2, playback_rate + change))
+
+    if (audio) {
+        audio.playbackRate = new_rate
+        playback_rate = new_rate
+
+        if (is_playing && currentPosition > 0) audio.currentTime = currentPosition
+    }
 }
 
 const handle_play = () => (is_playing = true)
