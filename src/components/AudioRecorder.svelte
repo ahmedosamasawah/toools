@@ -40,7 +40,7 @@ import {
     stop_recording,
     start_recording,
     recording_progress,
-} from '$lib/recorder/recorder'
+} from '~/features/recorder/recorder'
 
 let elapsed_time = $state(0)
 let {is_recording} = $props()

@@ -42,23 +42,14 @@
 <script module>
 import navaid from 'navaid'
 import {setContext} from 'svelte'
-
 import {session} from './stores.svelte.js'
+import {routes} from '$lib/utils/routes.js'
 
-// prettier-ignore
 /** @type {Array<[string, Promise<any>]>} */
-const routes = [
-    ['/',                     import('./routes/HomePage.svelte')],
-    ['/text-cleaner',         import('./routes/TextCleaner.svelte')],
-    ['/arabic-transcription', import('./routes/ArabicTranscription.svelte')],
-    ['/unichar',              import('./routes/Unichar.svelte')],
-    ['/diff-viewer',          import('./routes/DiffViewer.svelte')],
-    ['/quran-fonts',          import('./routes/QuranFontRenderer.svelte')],
-    ['/text-formatting',      import('./routes/TextFormatting.svelte')],
-    ['/audio-transcription',  import('./routes/AudioTranscription.svelte')],
-    ['/pdf-ocr',              import('./routes/PDFOcr.svelte')],
-    ['/recorder',             import('./routes/Recorder.svelte')],
-]
+const route_components = routes.map(route => [
+    route.path,
+    import(`./routes/${route.component_name}.svelte`),
+])
 
 /** @type {any | null} */
 let Component = $state(null)
@@ -75,7 +66,7 @@ export const router = navaid('/', async uri => {
     route.params = undefined
 })
 
-for (const [path, cmp_] of routes) {
+for (const [path, cmp_] of route_components) {
     router.on(path.toString(), params => {
         is404 = false
         document.startViewTransition
@@ -126,26 +117,12 @@ let sidebar_expanded = $state(false)
 const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
 sidebar_expanded = isMobile ? false : true
 
-/**
- * Handle tab change from sidebar
- * @param {string} tab - The new tab ID
- */
-function handle_tab_change(tab) {
-    router.route('/' + tab)
-}
+/** @param {string} tab */
+const handle_tab_change = tab => router.route('/' + tab)
 
-/**
- * Toggle sidebar expanded state
- */
-function handle_sidebar_toggle() {
-    sidebar_expanded = !sidebar_expanded
-}
+const handle_sidebar_toggle = () => (sidebar_expanded = !sidebar_expanded)
 
-/**
- * Get the appropriate CSS classes for the notification based on its type
- * @param {string} type - The type of notification (default, success, error, warning, info)
- * @returns {Object} Object with CSS classes as keys and true as values
- */
+/** @param {string} type */
 function get_notification_class(type) {
     switch (type) {
         case 'success':

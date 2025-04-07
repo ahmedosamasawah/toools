@@ -29,20 +29,20 @@
             <Sidebar.Group class="">
                 <Sidebar.GroupContent class="scrollbar-thin flex-grow overflow-y-auto">
                     <Sidebar.Menu class="space-y-2">
-                        {#each navigation_items as item}
+                        {#each routes as route}
                             <Button
-                                variant={sidebar_state.current_tab === item.id
+                                variant={sidebar_state.current_tab === route.id
                                     ? 'secondary'
                                     : 'ghost'}
                                 class="hover:bg-muted/60 h-12 w-full overflow-hidden rounded-md px-4 transition-colors"
-                                onclick={() => change_tab(item.id)}
-                                title={item.label}
-                                aria-label={item.label}
-                                aria-current={sidebar_state.current_tab === item.id
+                                onclick={() => change_tab(route.id)}
+                                title={route.title}
+                                aria-label={route.title}
+                                aria-current={sidebar_state.current_tab === route.id
                                     ? 'page'
                                     : undefined}
                             >
-                                <item.icon
+                                <route.icon
                                     class={[
                                         'h-5 w-5 flex-shrink-0',
                                         sidebar_state.is_expanded && 'ml-2',
@@ -51,7 +51,7 @@
                                 {#if sidebar_state.is_expanded}
                                     <span
                                         class="overflow-hidden text-ellipsis whitespace-nowrap transition-opacity duration-150"
-                                        >{item.label}</span
+                                        >{route.title}</span
                                     >
                                 {/if}
                             </Button>
@@ -64,26 +64,12 @@
 </div>
 
 <script>
-import {
-    ChevronLeft,
-    ChevronRight,
-    FileSearch,
-    FileText,
-    FileType,
-    Headphones,
-    Home,
-    Keyboard,
-    Mic,
-    Split,
-    TextQuote,
-    Type,
-} from '@lucide/svelte'
+import {ChevronLeft, ChevronRight} from '@lucide/svelte'
 import * as kv from 'idb-keyval'
-
 import {Button} from '$lib/components/ui/button/index.js'
 import * as Sidebar from '$lib/components/ui/sidebar/index.js'
-
 import GlobalSettingsButton from './GlobalSettingsButton.svelte'
+import {routes} from '$lib/utils/routes.js'
 
 const {
     is_expanded = false,
@@ -113,19 +99,11 @@ async function initialize_sidebar_state() {
         const saved_state = await load_sidebar_state()
         if (saved_state !== null) {
             sidebar_state.is_expanded = saved_state
-            if (saved_state !== is_expanded) {
-                toggle_sidebar()
-            }
+            if (saved_state !== is_expanded) toggle_sidebar()
         }
-    } else if (is_small_screen && sidebar_state.is_expanded) {
-        sidebar_state.is_expanded = false
-    }
+    } else if (is_small_screen && sidebar_state.is_expanded) sidebar_state.is_expanded = false
 }
 
-/**
- * Load sidebar expanded state from idb-keyval
- * @returns {Promise<boolean|null>} The saved state or null if not found
- */
 async function load_sidebar_state() {
     try {
         const saved_value = await kv.get('sidebar_expanded')
@@ -136,18 +114,15 @@ async function load_sidebar_state() {
 }
 
 $effect(() => {
-    if (!is_small_screen) {
-        sidebar_state.is_expanded = is_expanded
-    }
+    if (!is_small_screen) sidebar_state.is_expanded = is_expanded
+
     sidebar_state.current_tab = current_tab
 })
 
 $effect(() => {
-    if (sidebar_state.current_tab !== current_tab) {
-        if (!(sidebar_state.current_tab === '' && current_tab === '')) {
+    if (sidebar_state.current_tab !== current_tab)
+        if (!(sidebar_state.current_tab === '' && current_tab === ''))
             on_tab_change(sidebar_state.current_tab || '')
-        }
-    }
 })
 
 /**
@@ -162,57 +137,30 @@ function handle_toggle() {
     }
 }
 
-/**
- * Change the current tab and notify parent
- * @param {string} tab
- */
+/** @param {string} tab */
 function change_tab(tab) {
     sidebar_state.current_tab = tab
     on_tab_change(tab)
 }
 
-/**
- * Handle media query changes for responsive design
- * @param {{ matches: boolean; }} e
- */
+/** @param {{ matches: boolean; }} e */
 async function handle_media_query_change(e) {
     is_small_screen = e.matches
 
-    if (is_small_screen && sidebar_state.is_expanded) {
-        sidebar_state.is_expanded = false
-    } else if (!is_small_screen) {
+    if (is_small_screen && sidebar_state.is_expanded) sidebar_state.is_expanded = false
+    else if (!is_small_screen) {
         const saved_state = await load_sidebar_state()
         if (saved_state !== null) {
             if (saved_state !== sidebar_state.is_expanded) {
                 sidebar_state.is_expanded = saved_state
                 toggle_sidebar()
             }
-        } else {
-            sidebar_state.is_expanded = is_expanded
-        }
+        } else sidebar_state.is_expanded = is_expanded
     }
 }
-
-/** @type {Array<{id: string, label: string, icon: any}>} */
-const navigation_items = [
-    {id: '', label: 'الرئيسية', icon: Home},
-    {id: 'text-cleaner', label: 'تحسين النص', icon: TextQuote},
-    {id: 'audio-transcription', label: 'تحويل الصوت', icon: Headphones},
-    {id: 'text-formatting', label: 'معالجة النصوص', icon: FileText},
-    {id: 'pdf-ocr', label: 'استخراج PDF', icon: FileSearch},
-    {id: 'arabic-transcription', label: 'نسخ الحروف', icon: Keyboard},
-    {id: 'unichar', label: 'تحليل الحروف', icon: Type},
-    {id: 'diff-viewer', label: 'مقارنة النصوص', icon: Split},
-    {id: 'quran-fonts', label: 'خطوط القرآن', icon: FileType},
-    {id: 'recorder', label: 'المسجل', icon: Mic},
-]
 </script>
 
 <style>
-.animate-fade-in {
-    animation: fadeIn 0.3s ease-in-out;
-}
-
 @keyframes fadeIn {
     from {
         opacity: 0;

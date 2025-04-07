@@ -81,37 +81,37 @@ import {
     rename_recording,
     current_recording,
     set_current_recording,
-} from '$lib/recorder/recorder'
+} from '~/features/recorder/recorder'
 import {Trash2, Edit} from '@lucide/svelte'
-import {format_time, get_time_ago} from '$lib/recorder/utils'
+import {format_time, get_time_ago} from '~/features/recorder/utils'
 
 let is_loading = $state(true)
 
-/** @type {import('$lib/recorder/recorder').Recording | null} */
+/** @type {import('~/features/recorder/recorder').Recording | null} */
 let current_rec = $state(null)
 
-/** @type {import('$lib/recorder/recorder').Recording[]} */
+/** @type {import('~/features/recorder/recorder').Recording[]} */
 let recordings_list = $state([])
 
 loading.subscribe(value => (is_loading = value))
 recordings.subscribe(value => (recordings_list = value))
 current_recording.subscribe(value => (current_rec = value))
 
-/** @param {import('$lib/recorder/recorder').Recording} recording */
+/** @param {import('~/features/recorder/recorder').Recording} recording */
 const handle_select_recording = recording => set_current_recording(recording)
 
-/** @param {import('$lib/recorder/recorder').Recording} recording */
+/** @param {import('~/features/recorder/recorder').Recording} recording */
 const handle_rename_recording = recording => {
     const new_name = prompt('أدخل اسمًا جديدًا للتسجيل:', recording.name)
     if (new_name && new_name.trim()) rename_recording(recording.id, new_name.trim())
 }
 
-/** @param {import('$lib/recorder/recorder').Recording} recording */
+/** @param {import('~/features/recorder/recorder').Recording} recording */
 const handle_delete_recording = recording => {
     if (confirm('هل أنت متأكد من حذف هذا التسجيل؟')) delete_recording(recording.id)
 }
 
-/** @param {KeyboardEvent} event @param {import('$lib/recorder/recorder').Recording} recording */
+/** @param {KeyboardEvent} event @param {import('~/features/recorder/recorder').Recording} recording */
 const handle_key_down = (event, recording) => {
     if (event.key === 'Enter' || event.key === ' ') {
         handle_select_recording(recording)

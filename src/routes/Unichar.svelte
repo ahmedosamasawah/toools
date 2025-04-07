@@ -79,7 +79,7 @@ import {Card, CardContent, CardHeader, CardTitle} from '$ui/card/index.js'
 import {Tabs, TabsContent, TabsList, TabsTrigger} from '$ui/tabs/index.js'
 import {Textarea} from '$ui/textarea/index.js'
 
-import Char from '../components/Char.svelte'
+import Char from '~/components/Char.svelte'
 
 /**
  * @typedef {Object} Props

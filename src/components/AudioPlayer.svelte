@@ -1,18 +1,18 @@
 <div
-    class:hidden={is_recording}
-    class:opacity-50={!recording}
+    hidden={is_currently_recording}
+    class:opacity-50={!selected_recording}
     class="mb-6 rounded-lg bg-white p-4 shadow-sm"
 >
-    {#if recording && !is_recording}
+    {#if selected_recording && !is_currently_recording}
         <div class="mb-3 flex items-center justify-between">
             <button
                 title="تنزيل التسجيل"
-                onclick={() => download_recording(recording)}
+                onclick={() => download_recording(selected_recording)}
                 class="cursor-pointer p-2 text-gray-600 hover:text-blue-700"
             >
                 <Download class="h-4 w-4" />
             </button>
-            <div class="line-clamp-1 font-medium">{recording.name}</div>
+            <div class="line-clamp-1 font-medium">{selected_recording.name}</div>
             <button
                 aria-pressed={repeat}
                 onclick={toggle_repeat}
@@ -104,20 +104,31 @@
     {/if}
 </div>
 
+<audio
+    bind:this={audio}
+    onplay={handle_play}
+    onpause={handle_pause}
+    onended={handle_ended}
+    ontimeupdate={handle_time_update}
+    onloadedmetadata={handle_loaded_metadata}
+    hidden
+></audio>
+
 <script>
 import {
-    Play,
+    ChevronLeft,
+    ChevronRight,
+    Download,
     Pause,
+    Play,
     Repeat,
     SkipBack,
-    Download,
-    ChevronLeft,
     SkipForward,
-    ChevronRight,
 } from '@lucide/svelte'
+
 import {ProgressBar} from '$lib/components/ui/progress-bar'
 import {TimeDisplay} from '$lib/components/ui/time-display'
-import {playback_state, download_recording} from '$lib/recorder/recorder'
+import {download_recording, playback_state} from '~/features/recorder/recorder'
 
 /** @type {HTMLAudioElement} */
 let audio = $state(new Audio())
@@ -131,32 +142,25 @@ let playback_rate = $state(1.0)
 let load_promise = $state(null)
 let {is_recording, recording} = $props()
 
-// Setup audio and listeners when component is initialized
-$effect(() => {
-    // Setup listeners
-    setup_audio_listeners()
+let is_currently_recording = is_recording
+let selected_recording = recording
 
-    // Initialize playback state
+$effect(() => {
     playback_state.set({
         repeat,
         playback_rate,
         current_time: 0,
         is_playing: false,
-        duration: recording?.duration || 0,
+        duration: selected_recording?.duration || 0,
     })
-
-    // Cleanup on component destruction
-    return () => {
-        if (audio) cleanup_audio_listeners()
-    }
 })
 
 $effect(() => {
-    if (recording) load_audio(recording)
+    if (selected_recording) load_audio(selected_recording)
 })
 
 $effect(() => {
-    if (is_recording && is_playing && audio) {
+    if (is_currently_recording && is_playing && audio) {
         audio.pause()
         is_playing = false
     }
@@ -173,7 +177,7 @@ $effect(() => {
     }))
 })
 
-/** @param {import('$lib/recorder/recorder').Recording} rec */
+/** @param {import('~/features/recorder/recorder').Recording} rec */
 async function load_audio(rec) {
     if (!audio) return
 
@@ -211,7 +215,7 @@ async function load_audio(rec) {
 }
 
 async function toggle_play() {
-    if (!recording || !audio || is_recording) return
+    if (!selected_recording || !audio || is_currently_recording) return
 
     if (audio.paused && load_promise) await load_promise
 
@@ -226,7 +230,7 @@ function toggle_repeat() {
 
 /** @param {number} seconds */
 function skip(seconds) {
-    if (!recording || !audio || is_recording) return
+    if (!selected_recording || !audio || is_currently_recording) return
 
     const current = audio.currentTime || 0
     const max_duration = isFinite(duration) ? duration : 0
@@ -238,7 +242,7 @@ function skip(seconds) {
 
 /** @param {number} percentage */
 function handle_seek(percentage) {
-    if (!recording || !audio || is_recording) return
+    if (!selected_recording || !audio || is_currently_recording) return
 
     const max_duration = isFinite(duration) ? duration : 0
     const new_time = percentage * max_duration
@@ -281,26 +285,5 @@ function handle_ended() {
         audio.currentTime = 0
         audio.play()
     } else is_playing = false
-}
-
-function setup_audio_listeners() {
-    if (!audio) return
-
-    audio.addEventListener('play', handle_play)
-    audio.addEventListener('pause', handle_pause)
-    audio.addEventListener('ended', handle_ended)
-    audio.addEventListener('timeupdate', handle_time_update)
-    audio.addEventListener('loadedmetadata', handle_loaded_metadata)
-}
-
-function cleanup_audio_listeners() {
-    if (!audio) return
-
-    audio.pause()
-    audio.removeEventListener('play', handle_play)
-    audio.removeEventListener('pause', handle_pause)
-    audio.removeEventListener('ended', handle_ended)
-    audio.removeEventListener('timeupdate', handle_time_update)
-    audio.removeEventListener('loadedmetadata', handle_loaded_metadata)
 }
 </script>

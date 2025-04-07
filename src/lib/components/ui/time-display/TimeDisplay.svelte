@@ -3,7 +3,7 @@
 </p>
 
 <script>
-import {format_time} from '$lib/recorder/utils'
+import {format_time} from '~/features/recorder/utils'
 let {duration = 0, current_time = 0, show_remaining = false} = $props()
 
 /** @type {string} */

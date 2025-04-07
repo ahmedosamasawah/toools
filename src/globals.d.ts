@@ -8,6 +8,7 @@ declare global {
         __DEBUG__: boolean
         BASE_TITLE: string
         _VH_OFFSET: number
+        router_initialized: boolean
         _useragent: {ios: string; safari: string; no_keyboard: string}
     }
     interface Document {

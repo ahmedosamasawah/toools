@@ -191,7 +191,7 @@ import {Input} from '$lib/components/ui/input/index.js'
 import {Label} from '$lib/components/ui/label/index.js'
 import {enhance_ocr_text} from '$lib/utils/gemini-service.js'
 
-import FileDropzone from '../components/FileDropzone.svelte'
+import FileDropzone from '~/components/FileDropzone.svelte'
 import {active_operations} from '../stores.svelte.js'
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(

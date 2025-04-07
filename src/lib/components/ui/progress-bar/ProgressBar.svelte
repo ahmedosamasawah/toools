@@ -1,9 +1,9 @@
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
-    class:rounded
-    class:interactive
-    class="relative w-full overflow-hidden"
+    class="relative w-full overflow-hidden {rounded ? 'rounded-full' : ''} {interactive
+        ? 'cursor-pointer hover:opacity-90'
+        : ''}"
     bind:this={track}
     onclick={handle_click}
     style="
@@ -16,8 +16,7 @@
         background-color: {progress_color};
         width: {Math.min(100, Math.max(0, (value / max) * 100))}%;
         "
-        class="transition-width h-full duration-100"
-        class:rounded
+        class="h-full transition-all duration-100 ease-in-out {rounded ? 'rounded-full' : ''}"
     ></div>
 </div>
 
@@ -48,21 +47,3 @@ function handle_click(e) {
     on_seek(percentage)
 }
 </script>
-
-<style>
-.rounded {
-    border-radius: 9999px;
-}
-
-.interactive {
-    cursor: pointer;
-}
-
-.interactive:hover {
-    opacity: 0.9;
-}
-
-.transition-width {
-    transition: width 100ms ease-in-out;
-}
-</style>

@@ -9,12 +9,12 @@
 </main>
 
 <script>
-import AudioPlayer from '../components/AudioPlayer.svelte'
-import RecordButtons from '../components/AudioRecorder.svelte'
-import RecordingsList from '../components/RecordingsList.svelte'
-import {recording_progress, current_recording, load_recordings} from '$lib/recorder/recorder'
+import AudioPlayer from '~/components/AudioPlayer.svelte'
+import RecordButtons from '~/components/AudioRecorder.svelte'
+import RecordingsList from '~/components/RecordingsList.svelte'
+import {recording_progress, current_recording, load_recordings} from '~/features/recorder/recorder'
 
-/** @type {import('$lib/recorder/recorder').Recording | null} */
+/** @type {import('~/features/recorder/recorder').Recording | null} */
 let recording = $state(null)
 let is_recording = $state(false)
 

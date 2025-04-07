@@ -1,4 +1,4 @@
-import {del, get as idbGet, keys, set} from 'idb-keyval'
+import * as kv from 'idb-keyval'
 import {derived, get, writable} from 'svelte/store'
 
 import {format_time} from './utils.js'
@@ -66,22 +66,26 @@ export const current_recording = writable(null)
 export const has_recordings = derived(recordings, $recordings => $recordings.length > 0)
 
 /** @type {import('svelte/store').Readable<string>} */
-export const formatted_current_time = derived(playback_state, $state =>
-    format_time($state.current_time),
+export const formatted_current_time = derived(playback_state, $playback_state =>
+    format_time($playback_state.current_time),
 )
 
 /** @type {import('svelte/store').Readable<string>} */
-export const formatted_duration = derived(playback_state, $state => format_time($state.duration))
+export const formatted_duration = derived(playback_state, $playback_state =>
+    format_time($playback_state.duration),
+)
 
 /** @type {import('svelte/store').Readable<string>} */
-export const formatted_remaining_time = derived(playback_state, $state => {
-    const remaining = $state.duration - $state.current_time
+export const formatted_remaining_time = derived(playback_state, $playback_state => {
+    const remaining = $playback_state.duration - $playback_state.current_time
     return format_time(remaining >= 0 ? remaining : 0)
 })
 
 /** @type {import('svelte/store').Readable<number>} */
-export const progress_percentage = derived(playback_state, $state => {
-    if ($state.duration > 0) return ($state.current_time / $state.duration) * 100
+export const progress_percentage = derived(playback_state, $playback_state => {
+    if ($playback_state.duration > 0)
+        return ($playback_state.current_time / $playback_state.duration) * 100
+
     return 0
 })
 
@@ -98,9 +102,8 @@ let media_recorder = null
 let recording_stream = null
 
 /** @returns {Promise<void>} */
-export const start_recording = async () => {
+export async function start_recording() {
     const stream = await navigator.mediaDevices.getUserMedia({audio: true})
-    recording_stream = stream
 
     media_recorder = new MediaRecorder(stream, {
         mimeType: 'audio/webm;codecs=opus',
@@ -163,14 +166,6 @@ function cleanup_recording() {
 /** @returns {boolean} */
 export const is_recording_active = () => !!(media_recorder && media_recorder.state === 'recording')
 
-/** @param {Blob} blob*/
-export const create_audio_element = blob => {
-    const url = URL.createObjectURL(blob)
-    const audio = new Audio(url)
-    audio.load()
-    return audio
-}
-
 export const load_recordings = async () => {
     loading.set(true)
 
@@ -204,7 +199,7 @@ export const save_recording = async (blob, duration, name) => {
             duration: valid_duration,
         }
 
-        await set(id, recording)
+        await kv.set(id, recording)
         await load_recordings()
 
         /** @type {Recording[]} */
@@ -219,13 +214,13 @@ export const save_recording = async (blob, duration, name) => {
 }
 
 export const get_all_recordings = async () => {
-    const all_keys = await keys()
+    const all_keys = await kv.keys()
     const recording_keys = all_keys.filter(
         key => typeof key === 'string' && key.startsWith(RECORDING_PREFIX),
     )
 
     const recording_promises = recording_keys.map(async key => {
-        const recording = await idbGet(key)
+        const recording = await kv.get(key)
         if (recording?.blob) {
             recording.url = URL.createObjectURL(recording.blob)
             return recording
@@ -244,10 +239,10 @@ export const get_all_recordings = async () => {
 export const delete_recording = async id => {
     const current = get(current_recording)
 
-    const recording = await idbGet(id)
+    const recording = await kv.get(id)
     if (recording && recording.url) URL.revokeObjectURL(recording.url)
 
-    await del(id)
+    await kv.del(id)
     await load_recordings()
 
     if (current && current.id === id) {
@@ -260,7 +255,7 @@ export const delete_recording = async id => {
 
 /** @param {string} id @param {string} new_name */
 export const rename_recording = async (id, new_name) => {
-    const recording = await idbGet(id)
+    const recording = await kv.get(id)
     if (!recording) throw new Error('Recording not found')
 
     const updated_recording = {
@@ -268,7 +263,7 @@ export const rename_recording = async (id, new_name) => {
         name: new_name,
         url: '',
     }
-    await set(id, updated_recording)
+    await kv.set(id, updated_recording)
     await load_recordings()
 
     const current = get(current_recording)
@@ -282,7 +277,7 @@ export const rename_recording = async (id, new_name) => {
 
 /** @param {string} id  @param {number} duration */
 export const update_duration = async (id, duration) => {
-    const recording = await idbGet(id)
+    const recording = await kv.get(id)
     if (!recording) throw new Error('Recording not found')
 
     /** @type {Recording} */
@@ -291,7 +286,7 @@ export const update_duration = async (id, duration) => {
         duration,
         url: '',
     }
-    await set(id, updated_recording)
+    await kv.set(id, updated_recording)
 
     recordings.update(recs =>
         recs.map(r => {

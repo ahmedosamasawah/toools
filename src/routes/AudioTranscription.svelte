@@ -442,7 +442,7 @@ import {
     validate_audio_file,
 } from '$lib/utils/openai-service.js'
 
-import RequireAPIKey from '../components/RequireAPIKey.svelte'
+import RequireAPIKey from '~/components/RequireAPIKey.svelte'
 import {active_operations} from '../stores.svelte.js'
 
 /** @type {string} */
