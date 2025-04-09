@@ -5,16 +5,27 @@
 >
     {#if selected_recording && !is_currently_recording}
         <div class="mb-3 flex items-center justify-between">
-            <button
-                title="تنزيل التسجيل"
-                onclick={() => download_recording(selected_recording)}
-                class="cursor-pointer p-2 text-gray-600 hover:text-blue-700"
-            >
-                <Download class="h-4 w-4" />
-            </button>
+            <div class="flex gap-2">
+                <button
+                    title="تنزيل التسجيل"
+                    onclick={() => download_recording(selected_recording)}
+                    class="cursor-pointer p-2 text-gray-600 hover:text-blue-700"
+                >
+                    <Download class="h-4 w-4" />
+                </button>
+                <button
+                    title="نسخ التسجيل"
+                    onclick={() => handle_copy_to_clipboard(selected_recording)}
+                    class="cursor-pointer p-2 text-gray-600 hover:text-blue-700"
+                >
+                    <Clipboard class="h-4 w-4" />
+                </button>
+            </div>
+
             <div class="line-clamp-1 font-medium">{selected_recording.name}</div>
             <button
                 aria-pressed={repeat}
+                title="تكرار التسجيل"
                 onclick={toggle_repeat}
                 aria-label="Toggle repeat"
                 class:text-blue-600={repeat}
@@ -55,7 +66,7 @@
             <TimeDisplay {current_time} {duration} show_remaining={false} />
         </div>
 
-        <div class="flex items-center justify-between gap-2 max-[400px]:flex-col-reverse">
+        <div class="flex flex-col-reverse items-center justify-between gap-2 md:flex-row">
             <div class="flex items-center gap-2">
                 <button
                     class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md bg-gray-100 hover:bg-gray-200"
@@ -122,13 +133,18 @@ import {
     Pause,
     Play,
     Repeat,
+    Clipboard,
     SkipBack,
     SkipForward,
 } from '@lucide/svelte'
 
 import {ProgressBar} from '$lib/components/ui/progress-bar'
 import {TimeDisplay} from '$lib/components/ui/time-display'
-import {download_recording, playback_state} from '~/features/recorder/recorder'
+import {
+    playback_state,
+    download_recording,
+    copy_audio_to_clipboard,
+} from '~/features/recorder/recorder'
 
 /** @type {HTMLAudioElement} */
 let audio = $state(new Audio())
@@ -140,7 +156,7 @@ let playback_rate = $state(1.0)
 
 /** @type {Promise<void> | null} */
 let load_promise = $state(null)
-let {is_recording, recording} = $props()
+let {is_recording, recording, show_notification} = $props()
 
 let is_currently_recording = $derived(is_recording)
 let selected_recording = $derived(recording)
@@ -176,6 +192,21 @@ $effect(() => {
         playback_rate,
     }))
 })
+
+/**  @param {import('~/features/recorder/recorder').Recording} rec */
+async function handle_copy_to_clipboard(rec) {
+    if (!rec || !rec.blob) return
+
+    const success = await copy_audio_to_clipboard(rec)
+
+    if (success) show_notification('تم نسخ التسجيل إلى الحافظة', 'success')
+    else {
+        show_notification(
+            'نسخ التسجيل غير مدعوم في هذا المتصفح. يمكنك استخدام خيار التنزيل بدلاً من ذلك.',
+            'warning',
+        )
+    }
+}
 
 /** @param {import('~/features/recorder/recorder').Recording} rec */
 async function load_audio(rec) {

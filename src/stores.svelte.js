@@ -4,7 +4,16 @@ import {derived, writable} from 'svelte/store'
 /**
  * @typedef {Object.<string, string>} TextAreaDataType
  */
-
+/**
+ * @typedef {Object} Repl
+ * @property {boolean} enabled
+ * @property {string} id
+ * @property {boolean} search_is_regex
+ * @property {boolean} replace_is_fn
+ * @property {string} search
+ * @property {string} replace
+ * @property {string[]} flags
+ */
 export const active_operations = writable(0)
 
 export const session = writable({
@@ -12,13 +21,30 @@ export const session = writable({
     user: null,
 })
 
-function initSession() {
+export const replacer_state = writable({
+    /** @type {Repl[]} */
+    repls: [],
+    functions: '',
+    input: '',
+})
+
+kv.get('replacer_state').then(saved => {
+    if (saved) {
+        replacer_state.set(saved)
+    }
+})
+
+replacer_state.subscribe(value => {
+    kv.set('replacer_state', value)
+})
+
+function init_session() {
     setTimeout(() => {
         session.update(s => ({...s, loaded: true}))
     }, 100)
 }
 
-initSession()
+init_session()
 
 let operations_count = 0
 active_operations.subscribe(value => {

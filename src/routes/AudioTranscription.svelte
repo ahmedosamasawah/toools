@@ -58,6 +58,15 @@
                     </svelte:fragment>
                 </FileDropzone>
 
+                <Button
+                    variant="outline"
+                    size="sm"
+                    class="w-fit self-end"
+                    onclick={paste_clipboard_audio}
+                >
+                    📋 لصق رابط التسجيل
+                </Button>
+
                 {#if file_error}
                     <p class="text-destructive text-sm">{file_error}</p>
                 {/if}
@@ -415,6 +424,7 @@ import {
 } from '@lucide/svelte'
 
 import FileDropzone from '~/components/FileDropzone.svelte'
+import RequireAPIKey from '~/components/RequireAPIKey.svelte'
 import {Alert, AlertDescription, AlertTitle} from '$lib/components/ui/alert/index.js'
 import {Badge} from '$lib/components/ui/badge/index.js'
 import {Button} from '$lib/components/ui/button/index.js'
@@ -442,7 +452,6 @@ import {
     validate_audio_file,
 } from '$lib/utils/openai-service.js'
 
-import RequireAPIKey from '~/components/RequireAPIKey.svelte'
 import {active_operations} from '../stores.svelte.js'
 
 /** @type {string} */
@@ -609,6 +618,26 @@ const copy_to_clipboard = async () => {
     await navigator.clipboard.writeText(transcription_result)
     copied = true
     setTimeout(() => (copied = false), 2000)
+}
+
+async function paste_clipboard_audio() {
+    try {
+        const link = await navigator.clipboard.readText()
+        if (!link.startsWith('blob:')) {
+            error = 'الرابط المنسوخ ليس ملفًا صوتيًا صالحًا'
+            return
+        }
+
+        const response = await fetch(link)
+        const blob = await response.blob()
+
+        const file = new File([blob], 'recording.webm', {type: blob.type || 'audio/webm'})
+
+        process_selected_file(file)
+    } catch (err) {
+        console.error('فشل في لصق رابط التسجيل:', err)
+        error = 'حدث خطأ أثناء لصق رابط التسجيل'
+    }
 }
 
 const add_diacritics_to_text = async () => {

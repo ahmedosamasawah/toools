@@ -45,9 +45,7 @@
                     </div>
 
                     {#if gemini_status}
-                        <p
-                            class={`text-xs ${gemini_key_valid ? 'text-green-600' : 'text-amber-600'}`}
-                        >
+                        <p class="text-xs {gemini_key_valid ? 'text-green-600' : 'text-amber-600'}">
                             {gemini_status}
                         </p>
                     {/if}
@@ -89,9 +87,7 @@
                     </div>
 
                     {#if openai_status}
-                        <p
-                            class={`text-xs ${openai_key_valid ? 'text-green-600' : 'text-amber-600'}`}
-                        >
+                        <p class="text-xs {openai_key_valid ? 'text-green-600' : 'text-amber-600'}">
                             {openai_status}
                         </p>
                     {/if}

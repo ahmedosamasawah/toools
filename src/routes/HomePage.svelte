@@ -16,7 +16,7 @@
                 <div class="mb-2 flex items-center justify-between">
                     <h2 class="flex items-center gap-2 text-xl font-semibold">
                         <span class="bg-primary/10 text-primary rounded-full p-2">
-                            <svelte:component this={route.icon} class="h-5 w-5" />
+                            <route.icon class="h-5 w-5" />
                         </span>
                         {route.title}
                     </h2>

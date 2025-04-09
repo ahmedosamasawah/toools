@@ -78,14 +78,11 @@
                             <div class="flex items-center gap-2 space-x-2 space-x-reverse">
                                 <input
                                     type="checkbox"
-                                    id={`option-${replacement[0]}`}
+                                    id="option-{replacement[0]}"
                                     bind:checked={replacement_options[replacement[0]]}
                                     class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                                 />
-                                <label
-                                    for={`option-${replacement[0]}`}
-                                    class="cursor-pointer text-sm"
-                                >
+                                <label for="option-{replacement[0]}" class="cursor-pointer text-sm">
                                     {@html format_arrow(replacement[0])}
                                 </label>
                             </div>
@@ -165,9 +162,7 @@ let enhancement_options_open = $state(false)
 /** @type {Record<string, boolean>} */
 let replacement_options = $state(init_replacement_options())
 
-/**
- * @param {Event} event
- */
+/** @param {Event} event */
 function handle_text_input(event) {
     if (event.target instanceof HTMLTextAreaElement) {
         text = event.target.value
@@ -175,9 +170,7 @@ function handle_text_input(event) {
     }
 }
 
-/**
- * @returns {Record<string, boolean>}
- */
+/** @returns {Record<string, boolean>} */
 function init_replacement_options() {
     /** @type {Record<string, boolean>} */
     const options = {}
@@ -228,13 +221,9 @@ const copy_items = {
     ],
 }
 
-/**
- * @param {string} s
- * @returns {string}
- */
-function fix_ar_encoding(s) {
-    return new TextDecoder('windows-1256').decode(new Uint8Array([...s].map(c => c.charCodeAt(0))))
-}
+/** @param {string} s */
+const fix_ar_encoding = s =>
+    new TextDecoder('windows-1256').decode(new Uint8Array([...s].map(c => c.charCodeAt(0))))
 
 function process_text() {
     add_to_undo_stack(text)
@@ -249,14 +238,12 @@ function process_text() {
                     Array.isArray(pattern[0]) ? pattern : [pattern]
                 )
                 pairs.forEach(([regex, replace]) => {
-                    if (typeof replace === 'function') {
+                    if (typeof replace === 'function')
                         processed_text = processed_text.replace(
                             regex,
                             /** @type {ReplaceFunction} */ (replace),
                         )
-                    } else {
-                        processed_text = processed_text.replace(regex, replace)
-                    }
+                    else processed_text = processed_text.replace(regex, replace)
                 })
             }
         })
@@ -267,19 +254,15 @@ function process_text() {
     copy_to_clipboard(processed_text)
 }
 
-/**
- * @param {[string, ReplacementPair[]]} action
- */
+/** @param {[string, ReplacementPair[]]} action */
 function apply_action([_, patterns]) {
     add_to_undo_stack(text)
     let processed_text = text
 
     patterns.forEach(([regex, replace]) => {
-        if (typeof replace === 'function') {
+        if (typeof replace === 'function')
             processed_text = processed_text.replace(regex, /** @type {ReplaceFunction} */ (replace))
-        } else {
-            processed_text = processed_text.replace(regex, replace)
-        }
+        else processed_text = processed_text.replace(regex, replace)
     })
 
     text = processed_text
@@ -287,19 +270,12 @@ function apply_action([_, patterns]) {
     copy_to_clipboard(processed_text)
 }
 
-/**
- * @param {string} text
- */
-function copy_to_clipboard(text) {
+/** @param {string} text */
+const copy_to_clipboard = text =>
     navigator.clipboard.writeText(text).then(() => show_notification('تم النسخ'))
-}
 
-/**
- * @param {string} current_text
- */
-function add_to_undo_stack(current_text) {
-    undo_stack = [...undo_stack, current_text].slice(-10)
-}
+/** @param {string} current_text */
+const add_to_undo_stack = current_text => (undo_stack = [...undo_stack, current_text].slice(-10))
 
 function undo() {
     if (undo_stack.length > 0) {
@@ -312,13 +288,8 @@ function undo() {
     }
 }
 
-/**
- * @param {string} text
- * @returns {string}
- */
-function format_arrow(text) {
-    return text.replace(/➔/g, '<span class="arrow">➔</span>')
-}
+/** @param {string} text */
+const format_arrow = text => text.replace(/➔/g, '<span class="arrow">➔</span>')
 </script>
 
 <style>

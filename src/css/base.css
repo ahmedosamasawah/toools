@@ -167,7 +167,6 @@ input:is([type='text'], [type='email'], [type='number']):focus,
 textarea:focus {
   border-color: #66afe9;
   outline: 0;
-  box-shadow: 0 0 6px #77777761;
 }
 html.ios input,
 html.ios select,

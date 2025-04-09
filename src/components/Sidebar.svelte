@@ -1,6 +1,8 @@
 <div>
     <Sidebar.Root
-        class={`bg-card z-50 h-screen overflow-hidden border-x ${sidebar_state.is_expanded ? 'w-full md:w-52 lg:w-60' : 'w-16'}`}
+        class="bg-card z-50 h-screen overflow-hidden border-x {sidebar_state.is_expanded
+            ? 'w-full md:w-52 lg:w-60'
+            : 'w-20'}"
         style="flex-shrink: 0;"
     >
         <Sidebar.Content class="flex h-full flex-col">
@@ -8,6 +10,7 @@
                 class={[
                     'flex flex-wrap items-center justify-between gap-2 border-b p-4',
                     sidebar_state.is_expanded && 'gap-4',
+                    !sidebar_state.is_expanded && 'justify-center',
                 ]}
             >
                 <Button
@@ -28,7 +31,7 @@
             </div>
             <Sidebar.Group class="">
                 <Sidebar.GroupContent class="scrollbar-thin flex-grow overflow-y-auto">
-                    <Sidebar.Menu class="space-y-2">
+                    <Sidebar.Menu class="">
                         {#each routes as route}
                             <Button
                                 variant={sidebar_state.current_tab === route.id
@@ -66,10 +69,12 @@
 <script>
 import {ChevronLeft, ChevronRight} from '@lucide/svelte'
 import * as kv from 'idb-keyval'
+
 import {Button} from '$lib/components/ui/button/index.js'
 import * as Sidebar from '$lib/components/ui/sidebar/index.js'
-import GlobalSettingsButton from './GlobalSettingsButton.svelte'
 import {routes} from '$lib/utils/routes.js'
+
+import GlobalSettingsButton from './GlobalSettingsButton.svelte'
 
 const {
     is_expanded = false,

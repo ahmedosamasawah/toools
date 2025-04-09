@@ -105,9 +105,7 @@ let recording_stream = null
 export async function start_recording() {
     const stream = await navigator.mediaDevices.getUserMedia({audio: true})
 
-    media_recorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=opus',
-    })
+    media_recorder = new MediaRecorder(stream, {mimeType: 'audio/mp4'})
 
     audio_chunks = []
 
@@ -133,7 +131,7 @@ export const stop_recording = () => {
         }
 
         media_recorder.addEventListener('stop', () => {
-            const audio_blob = new Blob(audio_chunks, {type: 'audio/webm'})
+            const audio_blob = new Blob(audio_chunks, {type: 'audio/mp4'})
 
             const state = get(recording_progress)
             const duration = state.start_time ? (Date.now() - state.start_time) / 1000 : 0
@@ -316,4 +314,16 @@ export const download_recording = recording => {
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
+}
+
+/** @param {Recording} recording */
+export async function copy_audio_to_clipboard(recording) {
+    if (!recording?.url) return false
+
+    try {
+        await navigator.clipboard.writeText(recording.url)
+        return true
+    } catch {
+        return false
+    }
 }

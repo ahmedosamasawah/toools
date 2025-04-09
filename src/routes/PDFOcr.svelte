@@ -182,6 +182,7 @@
 import {AlertCircle, Check, Copy, FileSearch, FileText, Loader2, X} from '@lucide/svelte'
 import * as pdfjs from 'pdfjs-dist'
 
+import FileDropzone from '~/components/FileDropzone.svelte'
 import {RequireAPIKey} from '$lib/api/index.js'
 import {Alert, AlertDescription, AlertTitle} from '$lib/components/ui/alert/index.js'
 import {Button} from '$lib/components/ui/button/index.js'
@@ -191,7 +192,6 @@ import {Input} from '$lib/components/ui/input/index.js'
 import {Label} from '$lib/components/ui/label/index.js'
 import {enhance_ocr_text} from '$lib/utils/gemini-service.js'
 
-import FileDropzone from '~/components/FileDropzone.svelte'
 import {active_operations} from '../stores.svelte.js'
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -313,10 +313,6 @@ async function copy_to_clipboard() {
     setTimeout(() => (copied = false), 2000)
 }
 
-//---------------------------------------------------------------
-// Text processing functions
-//---------------------------------------------------------------
-
 /** @param {string} text */
 const process_extracted_text = async text => await enhance_ocr_text(text)
 
@@ -367,10 +363,6 @@ async function process_text_in_chunks(text) {
     return processedChunks.join('\n\n')
 }
 
-//---------------------------------------------------------------
-// Main PDF processing function
-//---------------------------------------------------------------
-
 async function extract_text_from_pdf() {
     if (!pdf_file) return
 
@@ -384,7 +376,7 @@ async function extract_text_from_pdf() {
     pages_to_process = []
     processing_phase = 'extracting'
 
-    active_operations.update(n => n + 1)
+    active_operations.update((/** @type {number} */ n) => n + 1)
 
     try {
         const pdf = await pdfjs.getDocument({url: URL.createObjectURL(pdf_file)}).promise
@@ -420,7 +412,7 @@ async function extract_text_from_pdf() {
     } finally {
         processing_phase = 'idle'
         is_processing = false
-        active_operations.update(n => n - 1)
+        active_operations.update((/** @type {number} */ n) => n - 1)
     }
 }
 </script>

@@ -6,6 +6,7 @@ import {
     Home,
     Keyboard,
     Mic,
+    Replace,
     Split,
     TextQuote,
     Type,
@@ -91,5 +92,13 @@ export const routes = [
         icon: Mic,
         description: 'تسجيل الصوت ونسخه او تحميله',
         component_name: 'Recorder',
+    },
+    {
+        id: 'replacer',
+        path: '/replacer',
+        title: 'استبدال النصوص',
+        icon: Replace,
+        description: ' أداة تفاعلية لتجربة واستبدال النصوص باستخدام قواعد regex',
+        component_name: 'Replace',
     },
 ]

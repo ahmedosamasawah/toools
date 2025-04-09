@@ -4,7 +4,7 @@
         {transition}
         {transitionConfig}
         class={cn(
-            'bg-background fixed top-[50%] left-[50%] z-50 grid w-full max-w-[90vw] translate-x-[-50%] translate-y-[-50%] gap-4 border p-6 shadow-lg sm:max-w-[700px] sm:rounded-lg md:w-full',
+            'bg-background fixed top-[50%] left-[50%] z-50 grid max-h-[700px] w-full max-w-[90vw] translate-x-[-50%] translate-y-[-50%] gap-4 overflow-auto border p-6 shadow-lg sm:max-w-[700px] sm:rounded-lg md:w-full',
             className,
         )}
         {...rest}
