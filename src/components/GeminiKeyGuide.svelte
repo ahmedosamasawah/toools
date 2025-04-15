@@ -16,12 +16,12 @@
             <li>
                 <span class="font-medium">قم بزيارة Google AI Studio:</span>
                 <a
-                    href="https://makersuite.google.com/app/api_key"
+                    href="https://aistudio.google.com/app/apikey"
                     target="_blank"
                     rel="noopener noreferrer"
                     class="ml-1 text-blue-600 underline"
                 >
-                    https://makersuite.google.com/app/api_key
+                    https://aistudio.google.com/app/apikey
                 </a>
             </li>
 

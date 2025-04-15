@@ -1,4 +1,4 @@
-<div class="cm-wrapper" use:add_to_dom dir="auto"></div>
+<div class="cm-wrapper h-[200px]" use:add_to_dom dir="auto"></div>
 
 <script>
 import {defaultKeymap, history, historyKeymap} from '@codemirror/commands'
@@ -61,12 +61,10 @@ $effect(() => {
 .cm-wrapper {
     border: 1px solid #aaa;
     overflow: auto;
-    height: 100%;
 }
 .cm-wrapper :global(.cm-editor) {
     padding: 0.1px;
     overflow: auto;
-    height: 100%;
 }
 .cm-wrapper :global(.cm-editor .cm-scroller) {
     font-family: inherit;

@@ -29,6 +29,7 @@ const default_prompts = {
     summarize_text: `قم بتلخيص النص التالي بشكل موجز وفعال، مع الحفاظ على النقاط الرئيسية والمعلومات المهمة:
     
     أعد النص الملخص فقط، بدون أي مقدمات أو تعليقات إضافية.`,
+    clean_text: `Improve structure and format this transcription without changing too much of the original text. Only reply with the cleaned transcription. DO NOT ADD ANYTHING ELSE.`,
     translate_text: `قم بترجمة النص التالي من اللغة العربية إلى اللغة TARGET_LANGUAGE مع الحفاظ على المعنى والسياق:
     
     أعد النص المترجم فقط، بدون أي مقدمات أو تعليقات إضافية.`,
@@ -44,12 +45,8 @@ const default_prompts = {
 export const custom_prompts = writable(default_prompts)
 
 export async function load_custom_prompts() {
-    try {
-        const saved_prompts = await kv.get('custom_ai_prompts')
-        if (saved_prompts) custom_prompts.set({...default_prompts, ...saved_prompts})
-    } catch (error) {
-        console.error('Failed to load custom prompts:', error)
-    }
+    const saved_prompts = await kv.get('custom_ai_prompts')
+    if (saved_prompts) custom_prompts.set({...default_prompts, ...saved_prompts})
 }
 
 /**
@@ -59,18 +56,13 @@ export async function load_custom_prompts() {
  * @returns {Promise<boolean>} - True if the prompt was saved successfully, false otherwise
  */
 export async function save_custom_prompt(prompt_type, prompt_text) {
-    try {
-        const current_prompts = get(custom_prompts)
-        const updated_prompts = {...current_prompts, [prompt_type]: prompt_text}
+    const current_prompts = get(custom_prompts)
+    const updated_prompts = {...current_prompts, [prompt_type]: prompt_text}
 
-        await kv.set('custom_ai_prompts', updated_prompts)
-        custom_prompts.set(updated_prompts)
+    await kv.set('custom_ai_prompts', updated_prompts)
+    custom_prompts.set(updated_prompts)
 
-        return true
-    } catch (error) {
-        console.error('Failed to save custom prompt:', error)
-        return false
-    }
+    return true
 }
 
 /**
@@ -79,30 +71,20 @@ export async function save_custom_prompt(prompt_type, prompt_text) {
  * @returns {Promise<boolean>} - True if the prompt was reset successfully, false otherwise
  */
 export async function reset_prompt(prompt_type) {
-    try {
-        const current_prompts = get(custom_prompts)
-        const updated_prompts = {...current_prompts, [prompt_type]: default_prompts[prompt_type]}
+    const current_prompts = get(custom_prompts)
+    const updated_prompts = {...current_prompts, [prompt_type]: default_prompts[prompt_type]}
 
-        await kv.set('custom_ai_prompts', updated_prompts)
-        custom_prompts.set(updated_prompts)
+    await kv.set('custom_ai_prompts', updated_prompts)
+    custom_prompts.set(updated_prompts)
 
-        return true
-    } catch (error) {
-        console.error('Failed to reset prompt:', error)
-        return false
-    }
+    return true
 }
 
 export async function reset_all_prompts() {
-    try {
-        await kv.set('custom_ai_prompts', default_prompts)
-        custom_prompts.set(default_prompts)
+    await kv.set('custom_ai_prompts', default_prompts)
+    custom_prompts.set(default_prompts)
 
-        return true
-    } catch (error) {
-        console.error('Failed to reset all prompts:', error)
-        return false
-    }
+    return true
 }
 
 /**

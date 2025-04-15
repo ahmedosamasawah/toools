@@ -33,7 +33,6 @@
 
 <script>
 import {Circle, Square} from '@lucide/svelte'
-import {createEventDispatcher} from 'svelte'
 import TimeDisplay from '$lib/components/ui/time-display'
 import {
     save_recording,
@@ -43,15 +42,14 @@ import {
 } from '~/features/recorder/recorder'
 
 let elapsed_time = $state(0)
-let {is_recording} = $props()
+let {is_recording, onRecordingStateChange} = $props()
 
 /** @type {number | undefined} */
 let interval_id = $state(undefined)
-const dispatch = createEventDispatcher()
 
 recording_progress.subscribe(state => {
     is_recording = state.is_active
-    dispatch('recordingStateChange', {is_recording: state.is_active})
+    onRecordingStateChange({is_recording: state.is_active})
 })
 
 $effect(() => {

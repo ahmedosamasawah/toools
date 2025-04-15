@@ -95,35 +95,31 @@
 </div>
 
 <script>
-import ChevronDown from '@lucide/svelte/icons/chevron-down'
 import * as DiffMatchPatch from 'diff-match-patch'
+import ChevronDown from '@lucide/svelte/icons/chevron-down'
 
-import {Card, CardContent} from '$ui/card/index.js'
-import {Collapsible, CollapsibleContent, CollapsibleTrigger} from '$ui/collapsible/index.js'
 import {Input} from '$ui/input/index.js'
 import {Label} from '$ui/label/index.js'
 import {Switch} from '$ui/switch/index.js'
 import {Textarea} from '$ui/textarea/index.js'
-
 import {text_area_store} from '../stores.svelte.js'
+import {Card, CardContent} from '$ui/card/index.js'
+import {Collapsible, CollapsibleContent, CollapsibleTrigger} from '$ui/collapsible/index.js'
 
-/**
- * @typedef {[number, string]} DiffTuple
- */
+/** @typedef {[number, string]} DiffTuple */
 
 const TEXT_A_KEY = 'diff-viewer-text-a'
 const TEXT_B_KEY = 'diff-viewer-text-b'
 
-// Get stored values from the store
 const stored_text_a = text_area_store.get_text(TEXT_A_KEY)
 const stored_text_b = text_area_store.get_text(TEXT_B_KEY)
 
-let text_a = $derived($stored_text_a)
-let text_b = $derived($stored_text_b)
 let timeout = $state(30)
 let edit_cost = $state(4)
 let is_open = $state(false)
 let cleanup_semantic = $state(true)
+let text_b = $derived($stored_text_b)
+let text_a = $derived($stored_text_a)
 let cleanup_efficiency = $state(false)
 
 $effect(() => {
@@ -136,11 +132,7 @@ $effect(() => {
 
 const dmp = new DiffMatchPatch.diff_match_patch()
 
-/**
- * @param {string} a
- * @param {string} b
- * @returns {DiffTuple[]}
- */
+/** @param {string} a @param {string} b @returns {DiffTuple[]} */
 function get_diff(a, b) {
     dmp.Diff_EditCost = edit_cost
     dmp.Diff_Timeout = timeout

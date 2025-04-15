@@ -1,4 +1,5 @@
 <ButtonPrimitive.Root
+    ButtonPrimitive.Root
     {builders}
     class={cn(buttonVariants({variant, size, className}), 'flex cursor-pointer items-center')}
     type="button"

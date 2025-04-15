@@ -3,13 +3,15 @@
     <span class="hidden md:inline">API Keys</span>
 </Button>
 
-<Dialog.Root bind:open={dialog_open}>
+<Dialog.Root
+    bind:open={dialog_open}
+    onOpenChange={open => {
+        if (open && !keys_initialized) initialize_keys()
+    }}
+>
     <Dialog.Content class="max-w-[90vw] sm:max-w-[500px]">
         <Dialog.Header>
             <Dialog.Title>API Keys</Dialog.Title>
-            <!-- <Dialog.Description lang="ar" dir="rtl"
-                >تكوين مفاتيح API للخدمات المختلفة</Dialog.Description
-            > -->
         </Dialog.Header>
 
         <Tabs value="gemini" class="w-full">
@@ -111,17 +113,14 @@
 
 <script>
 import {Eye, EyeOff, KeyRound} from '@lucide/svelte'
-import {onMount} from 'svelte'
 
 import {Button} from '$lib/components/ui/button/index.js'
 import * as Dialog from '$lib/components/ui/dialog/index.js'
 import {Input} from '$lib/components/ui/input/index.js'
-import {Tabs, TabsContent, TabsList, TabsTrigger} from '$lib/components/ui/tabs/index.js'
 import {has_api_key, init_api_keys, save_api_key} from '$lib/utils/api-keys.js'
+import {Tabs, TabsContent, TabsList, TabsTrigger} from '$lib/components/ui/tabs/index.js'
 
-/**
- * @typedef {'gemini' | 'openai'} api_key_type
- */
+/** @typedef {'gemini' | 'openai'} api_key_type */
 
 let gemini_key = $state('')
 let openai_key = $state('')
@@ -132,20 +131,21 @@ let show_gemini_key = $state(false)
 let show_open_ai_key = $state(false)
 let gemini_key_valid = $state(false)
 let openai_key_valid = $state(false)
+let keys_initialized = $state(false)
 
-onMount(async () => {
+async function initialize_keys() {
+    if (keys_initialized) return
+
     const {gemini_key: saved_gemini_key, openai_key: saved_open_ai_key} = await init_api_keys()
     gemini_key = saved_gemini_key || ''
     openai_key = saved_open_ai_key || ''
     await check_key_status('gemini')
     await check_key_status('openai')
-})
 
-/**
- * Saves the API key for the specified service
- * @param {api_key_type} service - The service to save the key for
- * @param {string} key - The API key to save
- */
+    keys_initialized = true
+}
+
+/** @param {api_key_type} service @param {string} key */
 async function save_key(service, key) {
     if (!key?.trim()) return
 
@@ -188,10 +188,7 @@ async function save_key(service, key) {
     }
 }
 
-/**
- * Checks if an API key exists for the specified service
- * @param {api_key_type} service - The service to check
- */
+/** @param {api_key_type} service */
 async function check_key_status(service) {
     if (service !== 'gemini' && service !== 'openai') return
     const keyExists = await has_api_key(service)

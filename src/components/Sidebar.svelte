@@ -175,38 +175,7 @@ async function handle_media_query_change(e) {
     }
 }
 
-/* Improved scrollbar styling */
-.scrollbar-thin {
-    scrollbar-width: thin;
-}
-
-.scrollbar-thin::-webkit-scrollbar {
-    width: 6px;
-}
-
-.scrollbar-thin::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.scrollbar-thin::-webkit-scrollbar-thumb {
-    background-color: rgba(155, 155, 155, 0.5);
-    border-radius: 20px;
-}
-
 :global(.transition-all) {
     transition-property: all;
-}
-
-/* Adjust for RTL layout */
-@media (min-width: 768px) {
-    body {
-        padding-right: 16rem;
-        padding-right: var(--sidebar-width, 16rem);
-        transition: padding-right 0.3s ease-in-out;
-    }
-
-    body.sidebar-collapsed {
-        padding-right: 4rem;
-    }
 }
 </style>

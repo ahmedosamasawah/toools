@@ -406,7 +406,6 @@ async function extract_text_from_pdf() {
             extracted_text = await process_text_in_chunks(accumulated_text)
         } else extracted_text = accumulated_text
     } catch (/** @type {unknown} */ err) {
-        console.error('Error extracting text from PDF:', err)
         error = err instanceof Error ? err.message : 'حدث خطأ أثناء استخراج النص من PDF'
         extracted_text = ''
     } finally {

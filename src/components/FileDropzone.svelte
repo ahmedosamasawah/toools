@@ -1,5 +1,3 @@
-<!-- @migration-task Error while migrating Svelte code: This migration would change the name of a slot making the component unusable -->
-<!-- @migration-task Error while migrating Svelte code: This migration would change the name of a slot making the component unusable -->
 <div>
     <div
         onkeydown={e => {
@@ -23,28 +21,47 @@
             type="file"
             class="hidden"
             bind:this={file_input}
+            {multiple}
             onchange={handle_file_select}
             accept={accepted_mimes === null ? undefined : accepted_mimes.join(',')}
         />
 
-        {#if file}
-            <slot name="file-preview" {file} {format_file_size}>
-                <div class="flex w-full flex-col items-center gap-2">
-                    <div
-                        class="bg-primary/10 flex h-12 w-12 items-center justify-center rounded-full"
-                    >
-                        <slot name="file-icon">
-                            <Upload class="text-primary h-6 w-6" />
-                        </slot>
+        {#if files.length > 0}
+            <slot name="files-preview" {files} {format_file_size}>
+                {#if !multiple || files.length === 1}
+                    <slot name="file-preview" file={files[0]} {format_file_size}>
+                        <div class="flex w-full flex-col items-center gap-2">
+                            <div
+                                class="bg-primary/10 flex h-12 w-12 items-center justify-center rounded-full"
+                            >
+                                <slot name="file-icon">
+                                    <Upload class="text-primary h-6 w-6" />
+                                </slot>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-sm font-medium">{files[0].name}</p>
+                                <p class="text-muted-foreground text-xs">
+                                    {format_file_size(files[0].size)}
+                                    <slot name="file-info"></slot>
+                                </p>
+                            </div>
+                        </div>
+                    </slot>
+                {:else}
+                    <div class="flex w-full flex-col items-center gap-2">
+                        <div
+                            class="bg-primary/10 flex h-12 w-12 items-center justify-center rounded-full"
+                        >
+                            <slot name="file-icon">
+                                <Upload class="text-primary h-6 w-6" />
+                            </slot>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-sm font-medium">{files.length} ملفات محددة</p>
+                            <p class="text-muted-foreground text-xs">اضغط لاختيار ملفات أخرى</p>
+                        </div>
                     </div>
-                    <div class="text-center">
-                        <p class="text-sm font-medium">{file.name}</p>
-                        <p class="text-muted-foreground text-xs">
-                            {format_file_size(file.size)}
-                            <slot name="file-info"></slot>
-                        </p>
-                    </div>
-                </div>
+                {/if}
             </slot>
         {:else}
             <slot name="placeholder">
@@ -56,12 +73,12 @@
                             <Upload class="h-6 w-6" />
                         </slot>
                     </div>
-                    <div>
-                        <p class="text-sm font-medium">اضغط لاختيار ملف أو اسحب وأفلت</p>
-                        {#if info_text}
-                            <p class="text-muted-foreground mt-1 text-xs">{info_text}</p>
-                        {/if}
-                    </div>
+                    <p class="text-sm font-medium">
+                        اضغط لاختيار {multiple ? 'ملفات' : 'ملف'} أو اسحب وأفلت
+                    </p>
+                    {#if info_text}
+                        <p class="text-muted-foreground mt-1 text-xs">{info_text}</p>
+                    {/if}
                 </div>
             </slot>
         {/if}
@@ -97,19 +114,37 @@ export let error = ''
 export let file = null
 
 /** @type {boolean} */
+export let multiple = false
+
+/** @type {File[]} */
+let files = []
+
+// Keep the file prop in sync with files array for backward compatibility
+$: {
+    if (file && files.length === 0) {
+        files = [file]
+    } else if (files.length > 0) {
+        file = files[0]
+    } else {
+        file = null
+    }
+}
+
+/** @type {boolean} */
 let is_dragging = false
 
 /** @type {HTMLInputElement | null} */
 let file_input = null
 
-/** @param {FileList | File[]} files Files to filter */
-function get_accepted_files(files) {
-    if (!files) return []
+/** @param {FileList | File[]} input_files Files to filter */
+function get_accepted_files(input_files) {
+    if (!input_files) return []
 
     /** @type {File[]} */
     let accepted_files = []
-    for (let i = 0; i < files.length; i++)
-        if (accepted_mimes === null || is_accepted(files[i])) accepted_files.push(files[i])
+    for (let i = 0; i < input_files.length; i++)
+        if (accepted_mimes === null || is_accepted(input_files[i]))
+            accepted_files.push(input_files[i])
 
     if (max !== 0) accepted_files = accepted_files.slice(0, max)
 
@@ -139,8 +174,8 @@ function is_accepted(item) {
 /** @param {Event} event File input change event */
 function handle_file_select(event) {
     /** @type {FileList | null} */
-    const files = /** @type {HTMLInputElement} */ (event?.target)?.files
-    if (files && files.length > 0) process_selected_files(files)
+    const input_files = /** @type {HTMLInputElement} */ (event?.target)?.files
+    if (input_files && input_files.length > 0) process_selected_files(input_files)
 }
 
 /** @param {DragEvent} event Drag event */
@@ -148,15 +183,15 @@ function handle_drop_file(event) {
     event.preventDefault()
     is_dragging = false
 
-    const files = event.dataTransfer?.files
-    if (files && files.length > 0) process_selected_files(files)
+    const input_files = event.dataTransfer?.files
+    if (input_files && input_files.length > 0) process_selected_files(input_files)
 }
 
-/** @param {FileList|File[]} files Selected files */
-function process_selected_files(files) {
+/** @param {FileList|File[]} input_files Selected files */
+function process_selected_files(input_files) {
     error = ''
 
-    const accepted_files = get_accepted_files(files)
+    const accepted_files = get_accepted_files(input_files)
 
     if (accepted_files.length === 0) {
         // Convert MIME types to file extensions for display
@@ -185,7 +220,12 @@ function process_selected_files(files) {
         return
     }
 
-    file = accepted_files[0]
+    if (multiple) {
+        files = accepted_files
+    } else {
+        files = [accepted_files[0]]
+    }
+
     handle_files(accepted_files)
 }
 

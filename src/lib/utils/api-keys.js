@@ -24,8 +24,7 @@ export async function init_api_keys() {
         }))
 
         return {gemini_key, openai_key}
-    } catch (error) {
-        console.error('Error loading API keys:', error)
+    } catch {
         return {gemini_key: '', openai_key: ''}
     }
 }
@@ -53,8 +52,7 @@ export async function save_api_key(service, key) {
         }
 
         return true
-    } catch (error) {
-        console.error(`Error saving ${service} API key:`, error)
+    } catch {
         return false
     }
 }
@@ -68,8 +66,7 @@ export async function has_api_key(service) {
     try {
         const key = await kv.get(`${service}_api_key`)
         return !!key && key.trim() !== ''
-    } catch (error) {
-        console.error(`Error checking for ${service} API key:`, error)
+    } catch {
         return false
     }
 }
@@ -82,8 +79,7 @@ export async function has_api_key(service) {
 export async function get_api_key(service) {
     try {
         return (await kv.get(`${service}_api_key`)) || ''
-    } catch (error) {
-        console.error(`Error getting ${service} API key:`, error)
+    } catch {
         return ''
     }
 }
@@ -101,8 +97,7 @@ export async function remove_api_key(service) {
             [service]: '',
         }))
         return true
-    } catch (error) {
-        console.error(`Error removing ${service} API key:`, error)
+    } catch {
         return false
     }
 }

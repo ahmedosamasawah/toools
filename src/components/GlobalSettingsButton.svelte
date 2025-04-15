@@ -48,6 +48,22 @@
                             إعداد المفتاح
                         </Button>
                     </div>
+
+                    <div class="flex items-center justify-between rounded-lg border p-4">
+                        <div class="space-y-1">
+                            <h3 class="font-medium">Utils API</h3>
+                            <p class="text-muted-foreground text-sm">
+                                مطلوب لأستخراج النص ومزامنه الصوت مع النص
+                            </p>
+                        </div>
+                        <Button
+                            variant="outline"
+                            onclick={() => (show_utils_dialog = true)}
+                            class="cursor-pointer"
+                        >
+                            إعداد المفتاح
+                        </Button>
+                    </div>
                 </div>
             </TabsContent>
 
@@ -94,6 +110,24 @@
     </Dialog.Root>
 {/if}
 
+{#if show_utils_dialog}
+    <Dialog.Root open={show_utils_dialog} onOpenChange={set_utils_dialog}>
+        <Dialog.Content>
+            <Dialog.Header>
+                <Dialog.Title>إعداد مفتاح Utils API</Dialog.Title>
+                <Dialog.Description
+                    >تحتاج إلى مفتاح Utils API لاستخدام هذه الميزة.</Dialog.Description
+                >
+            </Dialog.Header>
+            <APIKeyDialog
+                api_key_type="utils"
+                on_save={handle_save_key}
+                on_cancel={() => set_utils_dialog(false)}
+            />
+        </Dialog.Content>
+    </Dialog.Root>
+{/if}
+
 <script>
 import {Settings} from '@lucide/svelte'
 
@@ -107,6 +141,7 @@ import APIKeyDialog from './APIKeyDialog.svelte'
 let dialog_open = $state(false)
 let show_gemini_dialog = $state(false)
 let show_openai_dialog = $state(false)
+let show_utils_dialog = $state(false)
 
 /**
  * @param {boolean} is_open
@@ -122,9 +157,17 @@ function set_openai_dialog(is_open) {
     show_openai_dialog = is_open
 }
 
+/**
+ * @param {boolean} is_open
+ */
+function set_utils_dialog(is_open) {
+    show_utils_dialog = is_open
+}
+
 async function handle_save_key() {
     show_gemini_dialog = false
     show_openai_dialog = false
+    show_utils_dialog = false
 }
 
 const {show_notification = /** @type {(message: string, type?: string) => void} */ (() => {})} =

@@ -1,6 +1,7 @@
 import * as kv from 'idb-keyval'
 import {derived, get, writable} from 'svelte/store'
 
+import {convert_audio} from './ffmpeg.js'
 import {format_time} from './utils.js'
 
 /**
@@ -105,7 +106,7 @@ let recording_stream = null
 export async function start_recording() {
     const stream = await navigator.mediaDevices.getUserMedia({audio: true})
 
-    media_recorder = new MediaRecorder(stream, {mimeType: 'audio/mp4'})
+    media_recorder = new MediaRecorder(stream, {mimeType: 'audio/webm'})
 
     audio_chunks = []
 
@@ -131,7 +132,7 @@ export const stop_recording = () => {
         }
 
         media_recorder.addEventListener('stop', () => {
-            const audio_blob = new Blob(audio_chunks, {type: 'audio/mp4'})
+            const audio_blob = new Blob(audio_chunks, {type: 'audio/webm'})
 
             const state = get(recording_progress)
             const duration = state.start_time ? (Date.now() - state.start_time) / 1000 : 0
@@ -167,12 +168,10 @@ export const is_recording_active = () => !!(media_recorder && media_recorder.sta
 export const load_recordings = async () => {
     loading.set(true)
 
-    try {
-        const all_recordings = await get_all_recordings()
-        recordings.set(all_recordings)
-    } finally {
-        loading.set(false)
-    }
+    const all_recordings = await get_all_recordings()
+    recordings.set(all_recordings)
+
+    loading.set(false)
 }
 
 /**
@@ -181,34 +180,30 @@ export const load_recordings = async () => {
  * @param {string} [name]
  */
 export const save_recording = async (blob, duration, name) => {
-    try {
-        const valid_duration = isFinite(duration) ? duration : 0
+    const valid_duration = isFinite(duration) ? duration : 0
 
-        const id = `${RECORDING_PREFIX}${Date.now()}`
-        const recording_name = name || `تسجيل ${new Date().toLocaleTimeString()}`
+    const id = `${RECORDING_PREFIX}${Date.now()}`
+    const recording_name = name || `تسجيل ${new Date().toLocaleTimeString()}`
 
-        /** @type {Recording} */
-        const recording = {
-            id,
-            blob,
-            url: '',
-            date: new Date(),
-            name: recording_name,
-            duration: valid_duration,
-        }
-
-        await kv.set(id, recording)
-        await load_recordings()
-
-        /** @type {Recording[]} */
-        const all_recordings = get(recordings)
-        const new_recording = all_recordings.find(r => r.id === id)
-        if (new_recording) current_recording.set(new_recording)
-
-        return id
-    } catch (error) {
-        console.error('Failed to save recording:', error)
+    /** @type {Recording} */
+    const recording = {
+        id,
+        blob,
+        url: '',
+        date: new Date(),
+        name: recording_name,
+        duration: valid_duration,
     }
+
+    await kv.set(id, recording)
+    await load_recordings()
+
+    /** @type {Recording[]} */
+    const all_recordings = get(recordings)
+    const new_recording = all_recordings.find(r => r.id === id)
+    if (new_recording) current_recording.set(new_recording)
+
+    return id
 }
 
 export const get_all_recordings = async () => {
@@ -308,6 +303,7 @@ export const set_current_recording = recording => current_recording.set(recordin
 export const download_recording = recording => {
     if (!recording?.url || !recording?.name) return
 
+
     const a = document.createElement('a')
     a.href = recording.url
     a.download = `${recording.name}.webm`
@@ -320,10 +316,28 @@ export const download_recording = recording => {
 export async function copy_audio_to_clipboard(recording) {
     if (!recording?.url) return false
 
-    try {
-        await navigator.clipboard.writeText(recording.url)
-        return true
-    } catch {
-        return false
-    }
+    await navigator.clipboard.writeText(recording.url)
+    return true
+}
+
+/** @param {File} file @returns {Promise<Recording|null>} */
+export const import_audio_file = async file => {
+    loading.set(true)
+
+    const extension = file.name.split('.').pop()?.toLowerCase() || ''
+
+    const blob = new Blob([file], {type: file.type})
+    const result = await convert_audio(blob, extension)
+
+    const name =
+        file.name.replace(/\.[^/.]+$/, '') || `تسجيل مستورد ${new Date().toLocaleTimeString()}`
+
+    const id = await save_recording(result.blob, result.duration, name)
+
+    /** @type {Recording[]} */
+    const all_recordings = get(recordings)
+    const new_recording = all_recordings.find(r => r.id === id)
+
+    loading.set(false)
+    return new_recording || null
 }

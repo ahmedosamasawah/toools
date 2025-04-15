@@ -1,6 +1,7 @@
 [tools]
 node = '22'
 pnpm = '9'
+lefthook = 'latest'
 
 [tasks.build]
 run = 'pnpm install && pnpm build'

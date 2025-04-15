@@ -1,6 +1,6 @@
 import {get} from 'svelte/store'
 
-import {custom_prompts} from '../stores/prompts.js'
+import {custom_prompts} from '../../stores/prompts.js'
 import {get_api_key} from './api-keys.js'
 
 /**
@@ -107,6 +107,11 @@ export async function summarize_text(text) {
     const prompt = prompts.summarize_text
 
     return process_with_gemini(prompt, text)
+}
+
+/** @param {string} text */
+export async function clean_text(text) {
+    return process_with_gemini(get(custom_prompts).clean_text, text)
 }
 
 /**

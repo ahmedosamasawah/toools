@@ -1,10 +1,14 @@
-<div class="flex h-[100vh] flex-col bg-gray-50 font-['Kitab']">
-    <header class="mb-6 border-b border-gray-200 bg-white px-6 py-4 shadow-sm">
-        <h3 class="text-lg font-bold text-gray-800">استبدال النصوص</h3>
+<div class="flex flex-col bg-gray-50 font-['Kitab']">
+    <header
+        class="mb-4 border-b border-gray-200 bg-white px-3 py-3 shadow-sm md:mb-6 md:px-6 md:py-4"
+    >
+        <h3 class="text-base font-bold text-gray-800 md:text-lg">استبدال النصوص</h3>
     </header>
 
-    <div class="mb-6 flex flex-wrap items-center justify-between gap-4 px-6">
-        <div class="flex items-center gap-4">
+    <div
+        class="mb-4 flex flex-col items-start justify-between gap-3 px-3 md:mb-6 md:flex-row md:items-center md:px-6"
+    >
+        <div class="flex items-center gap-3">
             <div class="flex items-center gap-2 rounded-lg bg-white p-2 shadow-sm">
                 <label for="live-eval" class="text-sm text-gray-700">تقييم مباشر</label>
                 <Switch
@@ -17,9 +21,9 @@
             </div>
         </div>
 
-        <div class="flex flex-wrap gap-2">
+        <div class="flex w-full flex-wrap gap-2 md:w-auto">
             <button
-                class="flex items-center gap-1 rounded-md border border-gray-200 bg-white px-4 py-2 text-gray-700 shadow-sm transition-colors hover:bg-gray-100"
+                class="flex items-center gap-1 rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 shadow-sm transition-colors hover:bg-gray-100 md:px-4 md:py-2 md:text-base"
                 onclick={() => {
                     $replacer_state.repls = [...$replacer_state.repls, new_repl()]
                 }}
@@ -30,7 +34,7 @@
             <Dialog.Root bind:open={import_export_open}>
                 <Dialog.Trigger>
                     <button
-                        class="rounded-md border border-gray-200 bg-white px-4 py-2 text-gray-700 shadow-sm transition-colors hover:bg-gray-100"
+                        class="rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 shadow-sm transition-colors hover:bg-gray-100 md:px-4 md:py-2 md:text-base"
                     >
                         استيراد / تصدير
                     </button>
@@ -51,7 +55,7 @@
             <Dialog.Root bind:open={repl_presets_open}>
                 <Dialog.Trigger>
                     <button
-                        class="rounded-md border border-gray-200 bg-white px-4 py-2 text-gray-700 shadow-sm transition-colors hover:bg-gray-100"
+                        class="rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 shadow-sm transition-colors hover:bg-gray-100 md:px-4 md:py-2 md:text-base"
                     >
                         الاستبدالات
                     </button>
@@ -71,11 +75,11 @@
         </div>
     </div>
 
-    <div class="mb-6 px-6">
-        <ol class="repl-list space-y-3">
+    <div class="mb-4 px-3 md:mb-6 md:px-6">
+        <ol class="repl-list space-y-2 md:space-y-3">
             {#each $replacer_state.repls as repl, i (repl.id)}
                 <li
-                    class="rounded-lg bg-white p-4 shadow-sm transition-all duration-300 ease-in-out {!repl.enabled
+                    class="rounded-lg bg-white p-3 shadow-sm transition-all duration-300 ease-in-out md:p-4 {!repl.enabled
                         ? 'opacity-60'
                         : ''}"
                     class:disabled={!repl.enabled}
@@ -83,11 +87,66 @@
                     transition:slide|local
                     animate:flip={{duration: 400}}
                 >
-                    <div
-                        class="grid grid-cols-1 gap-4 md:grid-cols-[repeat(2,_minmax(0,1fr))_auto]"
-                    >
+                    <div class="grid grid-cols-1 gap-3 md:gap-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1"></div>
+                            <div class="flex items-center justify-end gap-2">
+                                <Switch
+                                    id="repl-enabled-{repl.id}"
+                                    checked={repl.enabled}
+                                    onCheckedChange={(/** @type {boolean} */ val) => {
+                                        repl.enabled = val
+                                        $replacer_state.repls = [...$replacer_state.repls]
+                                    }}
+                                />
+                                <Popover>
+                                    <svelte:fragment slot="button" let:show>
+                                        <button
+                                            aria-label="more actions"
+                                            class="rounded-md p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700 md:p-2"
+                                            onclick={show}
+                                            title="Actions"
+                                        >
+                                            <ChevronDown class="h-4 w-4" />
+                                        </button>
+                                    </svelte:fragment>
+                                    <div
+                                        class="popover action-wrap flex gap-1 rounded-md border border-gray-200 bg-white p-2 shadow-md"
+                                    >
+                                        <button
+                                            class="rounded-md p-2 text-red-500 hover:bg-red-50"
+                                            onclick={() => remove_repl(i)}
+                                            title="حذف"
+                                        >
+                                            <X class="h-4 w-4" />
+                                        </button>
+                                        {#if i > 0}
+                                            <button
+                                                aria-label="move up"
+                                                class="rounded-md p-2 text-gray-500 hover:bg-gray-100"
+                                                onclick={() => move_repl(i, -1)}
+                                                title="نقل للأعلى"
+                                            >
+                                                <MoveUp class="h-4 w-4" />
+                                            </button>
+                                        {/if}
+                                        {#if i + 1 < $replacer_state.repls.length}
+                                            <button
+                                                aria-label="move down"
+                                                class="rounded-md p-2 text-gray-500 hover:bg-gray-100"
+                                                onclick={() => move_repl(i, 1)}
+                                                title="نقل للأسفل"
+                                            >
+                                                <MoveDown class="h-4 w-4" />
+                                            </button>
+                                        {/if}
+                                    </div>
+                                </Popover>
+                            </div>
+                        </div>
+
                         <div
-                            class="input-wrapper rounded-md border border-gray-300 bg-white transition-shadow focus-within:ring-1 focus-within:ring-blue-400"
+                            class="input-wrapper overflow-auto rounded-md border border-gray-300 bg-white transition-shadow focus-within:ring-1 focus-within:ring-blue-400"
                         >
                             <div class="flex">
                                 <input
@@ -184,7 +243,7 @@
                         </div>
 
                         <div
-                            class="input-wrapper rounded-md border border-gray-300 bg-white transition-shadow focus-within:ring-1 focus-within:ring-blue-400"
+                            class="input-wrapper overflow-auto rounded-md border border-gray-300 bg-white transition-shadow focus-within:ring-1 focus-within:ring-blue-400"
                         >
                             <div class="flex">
                                 {#if repl.replace_is_fn}
@@ -227,77 +286,23 @@
                                 </button>
                             </div>
                         </div>
-
-                        <div class="flex items-center justify-center gap-3 md:justify-end">
-                            <Switch
-                                id="repl-enabled-{repl.id}"
-                                checked={repl.enabled}
-                                onCheckedChange={(/** @type {boolean} */ val) => {
-                                    repl.enabled = val
-                                    $replacer_state.repls = [...$replacer_state.repls]
-                                }}
-                            />
-                            <Popover>
-                                <svelte:fragment slot="button" let:show>
-                                    <button
-                                        aria-label="more actions"
-                                        class="rounded-md p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
-                                        onclick={show}
-                                        title="Actions"
-                                    >
-                                        <ChevronDown class="h-4 w-4" />
-                                    </button>
-                                </svelte:fragment>
-                                <div
-                                    class="popover action-wrap flex gap-1 rounded-md border border-gray-200 bg-white p-2 shadow-md"
-                                >
-                                    <button
-                                        class="rounded-md p-2 text-red-500 hover:bg-red-50"
-                                        onclick={() => remove_repl(i)}
-                                        title="حذف"
-                                    >
-                                        <X class="h-4 w-4" />
-                                    </button>
-                                    {#if i > 0}
-                                        <button
-                                            aria-label="move up"
-                                            class="rounded-md p-2 text-gray-500 hover:bg-gray-100"
-                                            onclick={() => move_repl(i, -1)}
-                                            title="نقل للأعلى"
-                                        >
-                                            <MoveUp class="h-4 w-4" />
-                                        </button>
-                                    {/if}
-                                    {#if i + 1 < $replacer_state.repls.length}
-                                        <button
-                                            aria-label="move down"
-                                            class="rounded-md p-2 text-gray-500 hover:bg-gray-100"
-                                            onclick={() => move_repl(i, 1)}
-                                            title="نقل للأسفل"
-                                        >
-                                            <MoveDown class="h-4 w-4" />
-                                        </button>
-                                    {/if}
-                                </div>
-                            </Popover>
-                        </div>
                     </div>
                 </li>
             {/each}
         </ol>
     </div>
 
-    <div class="mb-6 px-6">
+    <div class="mb-4 px-3 md:mb-6 md:px-6">
         <button
             onclick={() => {
                 editor_shown = !editor_shown
             }}
-            class="group mb-2 flex w-full items-center justify-between rounded-md bg-white p-3 shadow-sm transition-colors hover:bg-gray-100"
+            class="group mb-2 flex w-full items-center justify-between rounded-md bg-white p-2 shadow-sm transition-colors hover:bg-gray-100 md:p-3"
             class:bg-gray-100={editor_shown}
         >
-            <h3 class="text-gray-800">دوال الاستبدال</h3>
+            <h3 class="text-sm text-gray-800 md:text-base">دوال الاستبدال</h3>
             <ChevronDown
-                class="h-5 w-5 text-gray-500 transition-transform duration-300 {editor_shown
+                class="h-4 w-4 text-gray-500 transition-transform duration-300 md:h-5 md:w-5 {editor_shown
                     ? 'rotate-180'
                     : ''}"
             />
@@ -316,18 +321,20 @@
     </div>
 
     <div
-        class="flex flex-1 flex-col gap-4 overflow-hidden px-6 pb-6 md:flex-row"
-        style="min-height: 400px"
+        class="flex flex-1 flex-col gap-3 overflow-hidden px-3 pb-4 md:flex-row md:gap-4 md:px-6 md:pb-6"
+        style="min-height: 200px"
     >
         {#if show_input}
             <div
-                class="flex h-full min-h-[300px] flex-1 basis-0 flex-col rounded-lg border border-gray-200 bg-white shadow-sm"
+                class="flex h-full min-h-[200px] flex-1 basis-0 flex-col rounded-lg border border-gray-200 bg-white shadow-sm md:min-h-[300px]"
             >
-                <div class="flex items-center justify-between border-b border-gray-200 p-4">
-                    <h3 class="text-gray-800">المُدخل</h3>
+                <div
+                    class="flex h-auto items-center justify-between border-b border-gray-200 p-3 md:h-16 md:p-4"
+                >
+                    <h3 class="text-sm text-gray-800 md:text-base">المُدخل</h3>
                 </div>
                 <div
-                    class="textarea input flex-1 p-4 text-gray-800 focus:ring-1 focus:ring-blue-400 focus:outline-none"
+                    class="textarea input flex-1 rounded-md p-3 text-sm text-gray-800 focus:ring-1 focus:ring-blue-400 focus:outline-none md:p-4 md:text-base"
                     dir="auto"
                     contenteditable="plaintext-only"
                     oninput={e => {
@@ -348,29 +355,31 @@
         {/if}
 
         <div
-            class="flex h-full min-h-[300px] flex-1 basis-0 flex-col rounded-lg border border-gray-200 bg-white shadow-sm"
+            class="flex h-full min-h-[200px] flex-1 basis-0 flex-col rounded-lg border border-gray-200 bg-white shadow-sm md:min-h-[300px]"
         >
             <div
-                class="flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 p-4"
+                class="flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 p-3 md:p-4"
             >
-                <h3 class="text-gray-800">المُخرج</h3>
+                <h3 class="text-sm text-gray-800 md:text-base">المُخرج</h3>
                 <div class="flex flex-wrap items-center gap-2">
                     <button
-                        class="flex items-center gap-1 rounded-md border border-gray-200 bg-white px-3 py-2 text-gray-700 shadow-sm transition-colors hover:bg-gray-100"
+                        class="flex items-center gap-1 rounded-md border border-gray-200 bg-white px-2 py-1.5 text-sm text-gray-700 shadow-sm transition-colors hover:bg-gray-100 md:px-3 md:py-2"
                         aria-label="نسخ إلى الحافظة"
                         onclick={() => {
                             copy_text(output)
-                            show_notification('تم النسخ')
+                            show_notification('تم النسخ', 'success')
                         }}
                     >
                         <Copy class="h-4 w-4" />
-                        <span class="hidden sm:inline">نسخ</span>
+                        <span class="xs:inline hidden">نسخ</span>
                     </button>
 
                     <div
-                        class="flex items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2"
+                        class="flex items-center gap-2 rounded-md border border-gray-200 bg-white px-2 py-1.5 md:px-3 md:py-2"
                     >
-                        <label for="show-diff" class="text-sm text-gray-700">المقارنة</label>
+                        <label for="show-diff" class="text-xs text-gray-700 md:text-sm"
+                            >المقارنة</label
+                        >
                         <Switch
                             id="show-diff"
                             checked={show_diff}
@@ -381,13 +390,15 @@
                     </div>
 
                     {#if show_diff}
-                        <div class="rounded-md bg-blue-50 px-3 py-1 text-sm text-blue-700">
+                        <div
+                            class="rounded-md bg-blue-50 px-2 py-1 text-xs text-blue-700 md:px-3 md:text-sm"
+                        >
                             {changes_count} تغييرات
                         </div>
                     {/if}
                 </div>
             </div>
-            <div class="flex-1 overflow-auto">
+            <div class="h-64 flex-1 overflow-auto md:h-96">
                 {#if show_diff}
                     <Diff {pause_diffing} bind:changes_count a={input} b={output} />
                 {:else}
@@ -416,7 +427,6 @@ import {Button} from '$ui/button/index.js'
 import * as Dialog from '$ui/dialog/index.js'
 import {Switch} from '$ui/switch/index.js'
 
-import {show_notification} from '../lib/stores/notification.js'
 import {replacer_state} from '../stores.svelte.js'
 import CodeMirror from './CodeMirror.svelte'
 import CodeMirrorPlain from './CodeMirrorPlain.svelte'
@@ -441,6 +451,7 @@ if (!$replacer_state.repls) $replacer_state.repls = []
  * @property {any} [input]
  * @property {string} [more_methods]
  * @property {boolean} [pause_diffing]
+ * @property {(message: string, type?: string) => void} [show_notification]
  */
 
 /** @type {Props} */
@@ -448,6 +459,7 @@ let {
     input = $bindable($replacer_state.input || ''),
     more_methods = '',
     pause_diffing = $bindable(false),
+    show_notification = /** @type {(message: string, type?: string) => void} */ (() => {}),
 } = $props()
 
 let import_export_open = $state(false)
@@ -671,9 +683,24 @@ ol.repl-list {
     min-width: 0.6rem;
 }
 
+@media (min-width: 400px) {
+    .xs\:inline {
+        display: inline;
+    }
+}
+
 @media (max-width: 768px) {
     .input-wrapper {
         margin-bottom: 8px;
+    }
+
+    button,
+    input[type='checkbox'] {
+        min-height: 36px;
+    }
+
+    .overflow-auto {
+        -webkit-overflow-scrolling: touch;
     }
 }
 </style>

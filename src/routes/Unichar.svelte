@@ -71,20 +71,17 @@
 </Tabs>
 
 <script>
-import {Copy} from '@steeze-ui/lucide-icons'
 import {Icon} from '@steeze-ui/svelte-icon'
+import {Copy} from '@steeze-ui/lucide-icons'
 
 import {Button} from '$ui/button/index.js'
+import {Textarea} from '$ui/textarea/index.js'
 import {Card, CardContent, CardHeader, CardTitle} from '$ui/card/index.js'
 import {Tabs, TabsContent, TabsList, TabsTrigger} from '$ui/tabs/index.js'
-import {Textarea} from '$ui/textarea/index.js'
 
 import Char from '~/components/Char.svelte'
 
-/**
- * @typedef {Object} Props
- * @property {any} [show_notification]
- */
+/** @typedef {Object} Props @property {any} [show_notification] */
 
 /** @type {Props} */
 let {show_notification = () => {}} = $props()
@@ -95,9 +92,7 @@ let text = $state('بِسۡمِ ٱللَّهِ ٱلرَّحۡمَـٰنِ ٱلر
 /** @type {string | undefined} */
 let current_tab = $state('character-analysis')
 
-/**
- * @param {string} char
- */
+/** @param {string} char */
 function copy_character(char) {
     navigator.clipboard.writeText(char).then(() => show_notification('تم نسخ الحرف', 'success'))
 }
@@ -106,8 +101,4 @@ function normalize_text() {
     text = text.normalize('NFC')
     show_notification('تم تطبيع النص', 'success')
 }
-
-// onMount(() => {
-// 	// Any initialization code
-// });
 </script>

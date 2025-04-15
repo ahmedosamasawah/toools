@@ -1,7 +1,13 @@
 <div class="max-h-[80vh] space-y-4 overflow-y-auto" dir="rtl">
     <div class="flex items-center gap-2">
         <Badge variant="outline" class="bg-muted/60 px-3 py-1">
-            <Label for="api-key">{api_key_type === 'gemini' ? 'Gemini AI' : 'OpenAI'}</Label>
+            <Label for="api-key"
+                >{api_key_type === 'gemini'
+                    ? 'Gemini AI'
+                    : api_key_type === 'openai'
+                      ? 'OpenAI'
+                      : 'Utils'}</Label
+            >
         </Badge>
     </div>
 
@@ -17,6 +23,7 @@
                 size="icon"
                 type="button"
                 variant="outline"
+                class="justify-center"
                 onclick={() => (show_key = !show_key)}
             >
                 {#if show_key}
@@ -46,8 +53,10 @@
                 <div class="bg-muted/40 mt-2 rounded-md border p-3">
                     {#if api_key_type === 'gemini'}
                         <GeminiKeyGuide />
-                    {:else}
+                    {:else if api_key_type === 'openai'}
                         <OpenAIKeyGuide />
+                    {:else}
+                        <UtilsKeyGuide />
                     {/if}
                 </div>
             </CollapsibleContent>
@@ -70,11 +79,16 @@
 
 <script>
 import {AlertCircle, Eye, EyeOff, HelpCircle} from '@lucide/svelte'
-import {onMount} from 'svelte'
 
-import {Alert, AlertDescription, AlertTitle} from '$lib/components/ui/alert/index.js'
+import {
+    init_api_key,
+    validate_api_key,
+    api_key as api_key_store,
+    save_api_key as store_save_api_key,
+} from '~/stores/apiKey.js'
 import {Badge} from '$lib/components/ui/badge/index.js'
 import {Button} from '$lib/components/ui/button/index.js'
+
 import {
     Collapsible,
     CollapsibleContent,
@@ -83,12 +97,14 @@ import {
 import {Input} from '$lib/components/ui/input/index.js'
 import {Label} from '$lib/components/ui/label/index.js'
 import {get_api_key, save_api_key} from '$lib/utils/api-keys.js'
+import {Alert, AlertDescription, AlertTitle} from '$lib/components/ui/alert/index.js'
 
+import UtilsKeyGuide from './UtilsKeyGuide.svelte'
 import GeminiKeyGuide from './GeminiKeyGuide.svelte'
 import OpenAIKeyGuide from './OpenAIKeyGuide.svelte'
 
 /**
- * @typedef {'gemini' | 'openai'} api_key_type
+ * @typedef {'gemini' | 'openai' | 'utils'} api_key_type
  */
 
 const {
@@ -107,19 +123,30 @@ let title = $state(initial_title)
 let helper_text = $state(initial_helper_text)
 
 $effect(() => {
-    if (!title) title = api_key_type === 'gemini' ? 'مفتاح Gemini API' : 'مفتاح OpenAI API'
+    if (!title) {
+        if (api_key_type === 'gemini') title = 'مفتاح Gemini API'
+        else if (api_key_type === 'openai') title = 'مفتاح OpenAI API'
+        else title = 'مفتاح Utils API'
+    }
 
-    if (!helper_text)
-        helper_text =
-            api_key_type === 'gemini'
-                ? 'احصل على مفتاح Gemini API من Google AI Studio'
-                : 'احصل على مفتاح OpenAI API من لوحة تحكم OpenAI'
+    if (!helper_text) {
+        if (api_key_type === 'gemini') helper_text = 'احصل على مفتاح Gemini API من Google AI Studio'
+        else if (api_key_type === 'openai')
+            helper_text = 'احصل على مفتاح OpenAI API من لوحة تحكم OpenAI'
+        else helper_text = 'احصل على مفتاح Utils API عبر صفحة الاتصال'
+    }
 })
 
-onMount(async () => {
-    api_key = await get_api_key(api_key_type)
+async function initializeKeys() {
+    if (api_key_type === 'utils') {
+        await init_api_key()
+        api_key_store.subscribe(value => (api_key = value))
+    } else api_key = await get_api_key(api_key_type)
+
     temp_api_key = api_key
-})
+}
+
+initializeKeys()
 
 async function saveKey() {
     if (temp_api_key.trim() === '') return
@@ -136,15 +163,29 @@ async function saveKey() {
         return
     }
 
-    try {
-        const success = await save_api_key(api_key_type, temp_api_key)
+    if (api_key_type === 'utils' && temp_api_key.trim().length < 10) {
+        error_message = 'يجب أن يحتوي مفتاح Utils API على 10 أحرف على الأقل'
+        return
+    }
 
-        if (success) {
-            api_key = temp_api_key
-            on_save()
-        } else error_message = 'فشل حفظ مفتاح API. الرجاء المحاولة مرة أخرى.'
+    try {
+        if (api_key_type === 'utils') {
+            const is_valid = await validate_api_key(temp_api_key)
+
+            if (is_valid) {
+                await store_save_api_key(temp_api_key)
+                api_key = temp_api_key
+                on_save()
+            } else error_message = 'مفتاح API غير صالح. الرجاء التحقق والمحاولة مرة أخرى.'
+        } else {
+            const success = await save_api_key(api_key_type, temp_api_key)
+
+            if (success) {
+                api_key = temp_api_key
+                on_save()
+            } else error_message = 'فشل حفظ مفتاح API. الرجاء المحاولة مرة أخرى.'
+        }
     } catch (err) {
-        console.error('خطأ في حفظ مفتاح API:', err)
         error_message = `خطأ: ${err instanceof Error ? err.message : 'فشل حفظ مفتاح API'}`
     }
 }

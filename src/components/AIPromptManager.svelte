@@ -96,25 +96,21 @@
 
 <script>
 import {InfoIcon, RotateCcw, Save} from '@lucide/svelte'
-import {onMount} from 'svelte'
 
+import {
+    custom_prompts,
+    reset_all_prompts,
+    get_default_prompt,
+    save_custom_prompt,
+} from '~/stores/prompts.js'
 import {Button} from '$lib/components/ui/button/index.js'
 import {Tabs, TabsContent, TabsList, TabsTrigger} from '$lib/components/ui/tabs/index.js'
 import {Textarea} from '$lib/components/ui/textarea/index.js'
-import {
-    custom_prompts,
-    get_default_prompt,
-    reset_all_prompts,
-    save_custom_prompt,
-} from '$lib/stores/prompts.js'
 
 const {show_notification = /** @type {(message: string, type?: string) => void} */ (() => {})} =
     $props()
 
-/**
- * @param {string} message
- * @param {string} [type='default']
- */
+/** @param {string} message @param {string} [type='default'] */
 
 /** @type {string | undefined} */
 let active_tab = $state('format_text')
@@ -152,6 +148,4 @@ async function save_prompt(prompt_type) {
     if (success) show_notification('تم حفظ النص التوجيهي بنجاح', 'success')
     else show_notification('حدث خطأ أثناء حفظ النص التوجيهي', 'error')
 }
-
-onMount(() => (editable_prompts = {...$custom_prompts}))
 </script>

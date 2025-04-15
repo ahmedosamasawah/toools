@@ -3,7 +3,7 @@ import './css/tailwind.css'
 
 import {mount} from 'svelte'
 
-import {load_custom_prompts} from '$lib/stores/prompts.js'
+import {load_custom_prompts} from '~/stores/prompts.js'
 
 import App from './App.svelte'
 

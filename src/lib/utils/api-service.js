@@ -45,8 +45,7 @@ export async function handleApiError(response, defaultMessage = 'An error occurr
             errorData.message ||
             `${defaultMessage} (Status: ${response.status})`
         )
-    } catch (error) {
-        console.error('Error handling API error:', error)
+    } catch {
         return `${defaultMessage} (Status: ${response.status})`
     }
 }

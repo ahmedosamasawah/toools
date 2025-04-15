@@ -5,7 +5,7 @@
 >
     {#if selected_recording && !is_currently_recording}
         <div class="mb-3 flex items-center justify-between">
-            <div class="flex gap-2">
+            <div class="flex">
                 <button
                     title="تنزيل التسجيل"
                     onclick={() => download_recording(selected_recording)}
@@ -116,13 +116,13 @@
 </div>
 
 <audio
+    hidden
     bind:this={audio}
     onplay={handle_play}
     onpause={handle_pause}
     onended={handle_ended}
     ontimeupdate={handle_time_update}
     onloadedmetadata={handle_loaded_metadata}
-    hidden
 ></audio>
 
 <script>
@@ -146,8 +146,15 @@ import {
     copy_audio_to_clipboard,
 } from '~/features/recorder/recorder'
 
-/** @type {HTMLAudioElement} */
-let audio = $state(new Audio())
+/**
+ * @typedef {HTMLAudioElement & {
+ *   captureStream?: () => MediaStream
+ * }} EnhancedAudioElement
+ */
+
+/** @type {EnhancedAudioElement} */
+let audio
+
 let duration = $state(0)
 let repeat = $state(false)
 let current_time = $state(0)
@@ -156,10 +163,10 @@ let playback_rate = $state(1.0)
 
 /** @type {Promise<void> | null} */
 let load_promise = $state(null)
-let {is_recording, recording, show_notification} = $props()
+let {recording, is_recording, show_notification} = $props()
 
-let is_currently_recording = $derived(is_recording)
 let selected_recording = $derived(recording)
+let is_currently_recording = $derived(is_recording)
 
 $effect(() => {
     playback_state.set({
@@ -200,12 +207,11 @@ async function handle_copy_to_clipboard(rec) {
     const success = await copy_audio_to_clipboard(rec)
 
     if (success) show_notification('تم نسخ التسجيل إلى الحافظة', 'success')
-    else {
+    else
         show_notification(
             'نسخ التسجيل غير مدعوم في هذا المتصفح. يمكنك استخدام خيار التنزيل بدلاً من ذلك.',
             'warning',
         )
-    }
 }
 
 /** @param {import('~/features/recorder/recorder').Recording} rec */
@@ -248,7 +254,6 @@ async function toggle_play() {
     if (!selected_recording || !audio || is_currently_recording) return
 
     if (audio.paused && load_promise) await load_promise
-
     if (audio.paused) await audio.play(), (is_playing = true)
     else audio.pause(), (is_playing = false)
 }

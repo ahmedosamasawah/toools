@@ -8,6 +8,10 @@
   }
 }
 
+* {
+  font-family: Kitab;
+}
+
 /* base */
 @font-face {
   font-family: Kitab;
@@ -210,6 +214,10 @@ mark {
   color: red;
   font-weight: bold;
   background: none;
+}
+
+.ͼ1.cm-focused {
+  outline: none;
 }
 
 /* Expand btn */

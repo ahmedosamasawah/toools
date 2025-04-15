@@ -6,6 +6,7 @@ import {
     Home,
     Keyboard,
     Mic,
+    Radio,
     Replace,
     Split,
     TextQuote,
@@ -100,5 +101,13 @@ export const routes = [
         icon: Replace,
         description: ' أداة تفاعلية لتجربة واستبدال النصوص باستخدام قواعد regex',
         component_name: 'Replace',
+    },
+    {
+        id: 'synctext',
+        path: '/synctext',
+        title: 'معالجة الصورة والصوت',
+        icon: Radio,
+        description: 'استخراج النصوص من الصور ومزامنة النص مع الصوت',
+        component_name: 'SyncText',
     },
 ]

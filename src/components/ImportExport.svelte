@@ -27,11 +27,8 @@ import {replacer_state} from '../stores.svelte.js'
  */
 function show_tip(el) {
     function update() {
-        if (textarea_error) {
-            tip_options.set({direction: 'top', text: textarea_error, element: el})
-        } else {
-            tip_options.set({direction: 'top'})
-        }
+        if (textarea_error) tip_options.set({direction: 'top', text: textarea_error, element: el})
+        else tip_options.set({direction: 'top'})
     }
     update()
     return {update}

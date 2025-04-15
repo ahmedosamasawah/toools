@@ -88,20 +88,17 @@
 </Tabs>
 
 <script>
-import {Copy} from '@steeze-ui/lucide-icons'
 import {Icon} from '@steeze-ui/svelte-icon'
+import {Copy} from '@steeze-ui/lucide-icons'
 
-import {Button} from '$ui/button/index.js'
-import {Card, CardContent, CardHeader, CardTitle} from '$ui/card/index.js'
 import {Input} from '$ui/input/index.js'
 import {Label} from '$ui/label/index.js'
-import {Tabs, TabsContent, TabsList, TabsTrigger} from '$ui/tabs/index.js'
+import {Button} from '$ui/button/index.js'
 import {Textarea} from '$ui/textarea/index.js'
+import {Card, CardContent, CardHeader, CardTitle} from '$ui/card/index.js'
+import {Tabs, TabsContent, TabsList, TabsTrigger} from '$ui/tabs/index.js'
 
-/**
- * @typedef {Object} Props
- * @property {any} [show_notification]
- */
+/** @typedef {Object} Props @property {any} [show_notification] */
 
 /** @type {Props} */
 let {show_notification = () => {}} = $props()
@@ -151,7 +148,6 @@ async function load_font() {
         loaded_fonts.add(font_family)
         show_notification('تم تحميل الخط', 'success')
     } catch (error) {
-        console.error('Error loading font:', error)
         font_error = true
         show_notification(`فشل تحميل الخط: ${error}`, 'error')
     } finally {
@@ -162,6 +158,4 @@ async function load_font() {
 function copyText() {
     navigator.clipboard.writeText(text).then(() => show_notification('تم نسخ النص', 'success'))
 }
-
-// onMount(() => load_font())
 </script>
