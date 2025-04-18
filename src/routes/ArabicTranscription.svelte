@@ -121,6 +121,7 @@ import ChevronDown from '@lucide/svelte/icons/chevron-down'
 import {Copy} from '@steeze-ui/lucide-icons'
 import {Icon} from '@steeze-ui/svelte-icon'
 
+import {show_notification} from '~/App.svelte'
 import {Button} from '$ui/button/index.js'
 import {Card, CardContent, CardHeader, CardTitle} from '$ui/card/index.js'
 import {Collapsible, CollapsibleContent, CollapsibleTrigger} from '$ui/collapsible/index.js'
@@ -130,27 +131,15 @@ import {Textarea} from '$ui/textarea/index.js'
 
 import {text_area_store} from '../stores.svelte.js'
 
-/**
- * @typedef {Object} Props
- * @property {any} [show_notification]
- */
-
-/** @type {Props} */
-let {show_notification = () => {}} = $props()
-
 const TEXT_KEY = 'arabic-transcription'
 
 const stored_arabic_text = text_area_store.get_text(TEXT_KEY)
 
 let is_open = $state(false)
-let arabic_text = $derived($stored_arabic_text)
-let transcription_text = $derived(transliterate(arabic_text))
 let use_dmg_standard = $state(false)
 let include_diacritics = $state(true)
-
-$effect(() => {
-    transcription_text = transliterate(arabic_text)
-})
+let arabic_text = $derived($stored_arabic_text)
+let transcription_text = $derived(transliterate(arabic_text))
 
 /**
  * @type {{[key: string]: {standard: string, dmg: string}}}

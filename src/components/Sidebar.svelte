@@ -27,7 +27,7 @@
                     {/if}
                 </Button>
 
-                <GlobalSettingsButton {show_notification} />
+                <GlobalSettingsButton />
             </div>
             <Sidebar.Group class="">
                 <Sidebar.GroupContent class="scrollbar-thin flex-grow overflow-y-auto">
@@ -81,7 +81,6 @@ const {
     current_tab = '',
     toggle_sidebar = /** @type {() => void} */ (() => {}),
     on_tab_change = /** @type {(tab: string) => void} */ (() => {}),
-    show_notification = /** @type {(message: string, type?: string) => void} */ (() => {}),
 } = $props()
 
 const sidebar_state = $state({

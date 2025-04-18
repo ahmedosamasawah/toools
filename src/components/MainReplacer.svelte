@@ -423,6 +423,7 @@ import {
     unescape_str,
 } from 'components/src/util.js'
 
+import {show_notification} from '~/App.svelte'
 import {Button} from '$ui/button/index.js'
 import * as Dialog from '$ui/dialog/index.js'
 import {Switch} from '$ui/switch/index.js'
@@ -451,7 +452,6 @@ if (!$replacer_state.repls) $replacer_state.repls = []
  * @property {any} [input]
  * @property {string} [more_methods]
  * @property {boolean} [pause_diffing]
- * @property {(message: string, type?: string) => void} [show_notification]
  */
 
 /** @type {Props} */
@@ -459,7 +459,6 @@ let {
     input = $bindable($replacer_state.input || ''),
     more_methods = '',
     pause_diffing = $bindable(false),
-    show_notification = /** @type {(message: string, type?: string) => void} */ (() => {}),
 } = $props()
 
 let import_export_open = $state(false)

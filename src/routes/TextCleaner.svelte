@@ -129,6 +129,7 @@ import {SlidersVertical, Undo} from '@steeze-ui/lucide-icons'
 import {Icon} from '@steeze-ui/svelte-icon'
 import {slide} from 'svelte/transition'
 
+import {show_notification} from '~/App.svelte'
 import Button from '~/lib/components/ui/button/button.svelte'
 
 import {text_area_store} from '../stores.svelte.js'
@@ -139,13 +140,6 @@ import replacements from '../util/replacements.js'
 /** @typedef {[string, ReplacementPair | ReplacementPair[], number?]} ReplacementRule */
 /** @typedef {[string, ReplacementRule[]]} ReplacementGroup */
 
-/**
- * @typedef {Object} Props
- * @property {(message: string) => void} show_notification
- */
-
-/** @type {Props} */
-let {show_notification} = $props()
 const EDITOR_ID = 'text-cleaner'
 
 // Get the stored text value through the store

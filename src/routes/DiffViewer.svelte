@@ -95,16 +95,17 @@
 </div>
 
 <script>
-import * as DiffMatchPatch from 'diff-match-patch'
 import ChevronDown from '@lucide/svelte/icons/chevron-down'
+import * as DiffMatchPatch from 'diff-match-patch'
 
+import {Card, CardContent} from '$ui/card/index.js'
+import {Collapsible, CollapsibleContent, CollapsibleTrigger} from '$ui/collapsible/index.js'
 import {Input} from '$ui/input/index.js'
 import {Label} from '$ui/label/index.js'
 import {Switch} from '$ui/switch/index.js'
 import {Textarea} from '$ui/textarea/index.js'
+
 import {text_area_store} from '../stores.svelte.js'
-import {Card, CardContent} from '$ui/card/index.js'
-import {Collapsible, CollapsibleContent, CollapsibleTrigger} from '$ui/collapsible/index.js'
 
 /** @typedef {[number, string]} DiffTuple */
 

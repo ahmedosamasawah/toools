@@ -23,9 +23,7 @@ export default [
     {
         ignores: [
             'misc/**/*',
-            ...'node_modules,dist,dist-native,android,ios,public'
-                .split(',')
-                .map(x => x + '/**/*'),
+            ...'node_modules,dist,dist-native,android,ios,public'.split(',').map(x => x + '/**/*'),
             'build.js',
         ],
     },

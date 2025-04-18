@@ -28,9 +28,11 @@ let {callback} = $props()
 
 const ar_wrap = (/** @type {string | number | any[]} */ ar) =>
     Array.isArray(ar) && Array.isArray(ar[0]) ? ar : [ar]
-const harakat_prep = (/** @type {string} */ s) => s.replace(/[\u0621-\u064A\u0651]/g, '$&[ً-ْ]*')
+const harakat_prep = (/** @type {string} */ s) =>
+    // eslint-disable-next-line no-misleading-character-class
+    s.replace(/[\u0621-\u064A\u0651]/g, '$&(?:[\u064B\u064C\u064D\u064E\u064F\u0650\u0651\u0652])*')
 const prep_honorific = (/** @type {string} */ s) =>
-    new RegExp(`([(ـ-] *)?${harakat_prep(s)}( *[)ـ-])?`, 'g')
+    new RegExp(`(?:\\(|ـ)?( *)?${harakat_prep(s)}( *)?(?:\\)|ـ)?`, 'g')
 const repls = [
     [
         'تحويل علامات الترقيم للعربية',
@@ -102,8 +104,8 @@ const repls = [
             ],
         ],
     ],
-    ['نقل الشدة قبل الحركة', [/([ً-ِْ])ّ/g, 'ّ$1']],
-    ['حذف الحركات التي ليست بعد حرف', [/([^\P{Script=Arabic}ً-ْ])[ً-ْ]+/gu, '$1'], 0],
+    ['نقل الشدة قبل الحركة', [/([ًٌٍَُِْ])ّ/g, 'ّ$1']],
+    ['حذف الحركات التي ليست بعد حرف', [/([^\P{Script=Arabic}ًٌٍَُِّْ])[ًٌٍَُِّْ]+/gu, '$1'], 0],
     [
         'حذف السكون على حرفي المد',
         [/(ِي|ُو)ْ/g, (/** @type {string | any[]} */ m) => m.slice(0, -1)],

@@ -71,20 +71,15 @@
 </Tabs>
 
 <script>
-import {Icon} from '@steeze-ui/svelte-icon'
 import {Copy} from '@steeze-ui/lucide-icons'
+import {Icon} from '@steeze-ui/svelte-icon'
 
+import {show_notification} from '~/App.svelte'
+import Char from '~/components/Char.svelte'
 import {Button} from '$ui/button/index.js'
-import {Textarea} from '$ui/textarea/index.js'
 import {Card, CardContent, CardHeader, CardTitle} from '$ui/card/index.js'
 import {Tabs, TabsContent, TabsList, TabsTrigger} from '$ui/tabs/index.js'
-
-import Char from '~/components/Char.svelte'
-
-/** @typedef {Object} Props @property {any} [show_notification] */
-
-/** @type {Props} */
-let {show_notification = () => {}} = $props()
+import {Textarea} from '$ui/textarea/index.js'
 
 /** @type {string} */
 let text = $state('بِسۡمِ ٱللَّهِ ٱلرَّحۡمَـٰنِ ٱلرَّحِیمِ')

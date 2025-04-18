@@ -68,7 +68,7 @@
             </TabsContent>
 
             <TabsContent value="ai-prompts" class="space-y-4">
-                <AIPromptManager {show_notification} />
+                <AIPromptManager />
             </TabsContent>
         </Tabs>
     </Dialog.Content>
@@ -169,7 +169,4 @@ async function handle_save_key() {
     show_openai_dialog = false
     show_utils_dialog = false
 }
-
-const {show_notification = /** @type {(message: string, type?: string) => void} */ (() => {})} =
-    $props()
 </script>

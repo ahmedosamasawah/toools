@@ -129,23 +129,23 @@
 import {
     ChevronLeft,
     ChevronRight,
+    Clipboard,
     Download,
     Pause,
     Play,
     Repeat,
-    Clipboard,
     SkipBack,
     SkipForward,
 } from '@lucide/svelte'
 
-import {ProgressBar} from '$lib/components/ui/progress-bar'
-import {TimeDisplay} from '$lib/components/ui/time-display'
+import {show_notification} from '~/App.svelte'
 import {
-    playback_state,
-    download_recording,
     copy_audio_to_clipboard,
-} from '~/features/recorder/recorder'
-
+    download_recording,
+    playback_state,
+} from '~/features/recorder/recorder.js'
+import {ProgressBar} from '$lib/components/ui/progress-bar/index.js'
+import {TimeDisplay} from '$lib/components/ui/time-display/index.js'
 /**
  * @typedef {HTMLAudioElement & {
  *   captureStream?: () => MediaStream
@@ -163,7 +163,7 @@ let playback_rate = $state(1.0)
 
 /** @type {Promise<void> | null} */
 let load_promise = $state(null)
-let {recording, is_recording, show_notification} = $props()
+let {recording, is_recording} = $props()
 
 let selected_recording = $derived(recording)
 let is_currently_recording = $derived(is_recording)

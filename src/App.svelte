@@ -2,7 +2,6 @@
     <div class="bg-background flex h-screen">
         <Sidebar
             current_tab={route.path.substring(1) || ''}
-            {show_notification}
             is_expanded={sidebar_expanded}
             on_tab_change={handle_tab_change}
             toggle_sidebar={handle_sidebar_toggle}
@@ -111,20 +110,13 @@ session.subscribe($session => {
         window.router_initialized = true
     }
 })
-</script>
-
-<script>
-import toast, {Toaster} from 'svelte-french-toast'
-
-import Footer from './components/Footer.svelte'
-import Sidebar from './components/Sidebar.svelte'
 
 /**
  * @param {string} message
  * @param {string} type (default, success, error, warning, info)
  * @param {number} duration
  */
-function show_notification(message, type = 'success', duration = 2000) {
+export function show_notification(message, type = 'success', duration = 2000) {
     switch (type) {
         case 'success':
             toast.success(message, {duration})
@@ -151,6 +143,13 @@ function show_notification(message, type = 'success', duration = 2000) {
             break
     }
 }
+</script>
+
+<script>
+import toast, {Toaster} from 'svelte-french-toast'
+
+import Footer from './components/Footer.svelte'
+import Sidebar from './components/Sidebar.svelte'
 
 setContext('router', router)
 

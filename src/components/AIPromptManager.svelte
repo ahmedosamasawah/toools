@@ -97,18 +97,16 @@
 <script>
 import {InfoIcon, RotateCcw, Save} from '@lucide/svelte'
 
+import {show_notification} from '~/App.svelte'
 import {
     custom_prompts,
-    reset_all_prompts,
     get_default_prompt,
+    reset_all_prompts,
     save_custom_prompt,
 } from '~/stores/prompts.js'
 import {Button} from '$lib/components/ui/button/index.js'
 import {Tabs, TabsContent, TabsList, TabsTrigger} from '$lib/components/ui/tabs/index.js'
 import {Textarea} from '$lib/components/ui/textarea/index.js'
-
-const {show_notification = /** @type {(message: string, type?: string) => void} */ (() => {})} =
-    $props()
 
 /** @param {string} message @param {string} [type='default'] */
 
@@ -136,11 +134,7 @@ const prompt_descriptions = {
 }
 
 /** @type {Record<string, string>} */
-let editable_prompts = $state({})
-
-$effect(() => {
-    if ($custom_prompts) editable_prompts = {...$custom_prompts}
-})
+let editable_prompts = $derived($custom_prompts ? {...$custom_prompts} : {})
 
 /** @param {string} prompt_type */
 async function save_prompt(prompt_type) {

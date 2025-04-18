@@ -1,12 +1,12 @@
 <div class="cm-wrapperz" use:add_to_dom style="--max_height: {max_height}px"></div>
 
 <script>
-import {keymap} from '@codemirror/view'
-import {EditorState} from '@codemirror/state'
-import {indentUnit} from '@codemirror/language'
-import {basicSetup, EditorView} from 'codemirror'
 import {indentWithTab} from '@codemirror/commands'
 import {javascript} from '@codemirror/lang-javascript'
+import {indentUnit} from '@codemirror/language'
+import {EditorState} from '@codemirror/state'
+import {keymap} from '@codemirror/view'
+import {basicSetup, EditorView} from 'codemirror'
 
 export let value = ''
 export let max_height = 500

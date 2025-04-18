@@ -81,14 +81,14 @@
 import {AlertCircle, Eye, EyeOff, HelpCircle} from '@lucide/svelte'
 
 import {
-    init_api_key,
-    validate_api_key,
     api_key as api_key_store,
+    init_api_key,
     save_api_key as store_save_api_key,
+    validate_api_key,
 } from '~/stores/apiKey.js'
+import {Alert, AlertDescription, AlertTitle} from '$lib/components/ui/alert/index.js'
 import {Badge} from '$lib/components/ui/badge/index.js'
 import {Button} from '$lib/components/ui/button/index.js'
-
 import {
     Collapsible,
     CollapsibleContent,
@@ -97,18 +97,16 @@ import {
 import {Input} from '$lib/components/ui/input/index.js'
 import {Label} from '$lib/components/ui/label/index.js'
 import {get_api_key, save_api_key} from '$lib/utils/api-keys.js'
-import {Alert, AlertDescription, AlertTitle} from '$lib/components/ui/alert/index.js'
 
-import UtilsKeyGuide from './UtilsKeyGuide.svelte'
 import GeminiKeyGuide from './GeminiKeyGuide.svelte'
 import OpenAIKeyGuide from './OpenAIKeyGuide.svelte'
+import UtilsKeyGuide from './UtilsKeyGuide.svelte'
 
 /**
  * @typedef {'gemini' | 'openai' | 'utils'} api_key_type
  */
 
 const {
-    initial_title = /** @type {string} */ (''),
     on_save = /** @type {() => void} */ (() => {}),
     initial_helper_text = /** @type {string} */ (''),
     on_cancel = /** @type {() => void} */ (() => {}),
@@ -119,23 +117,15 @@ let api_key = $state('')
 let temp_api_key = $state('')
 let show_key = $state(false)
 let error_message = $state('')
-let title = $state(initial_title)
-let helper_text = $state(initial_helper_text)
 
-$effect(() => {
-    if (!title) {
-        if (api_key_type === 'gemini') title = 'مفتاح Gemini API'
-        else if (api_key_type === 'openai') title = 'مفتاح OpenAI API'
-        else title = 'مفتاح Utils API'
-    }
-
-    if (!helper_text) {
-        if (api_key_type === 'gemini') helper_text = 'احصل على مفتاح Gemini API من Google AI Studio'
-        else if (api_key_type === 'openai')
-            helper_text = 'احصل على مفتاح OpenAI API من لوحة تحكم OpenAI'
-        else helper_text = 'احصل على مفتاح Utils API عبر صفحة الاتصال'
-    }
-})
+let helper_text = $derived(
+    initial_helper_text ||
+        (api_key_type === 'gemini'
+            ? 'احصل على مفتاح Gemini API من Google AI Studio'
+            : api_key_type === 'openai'
+              ? 'احصل على مفتاح OpenAI API من لوحة تحكم OpenAI'
+              : 'احصل على مفتاح Utils API عبر صفحة الاتصال'),
+)
 
 async function initializeKeys() {
     if (api_key_type === 'utils') {

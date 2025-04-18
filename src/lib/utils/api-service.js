@@ -1,4 +1,4 @@
-import {getapi_key, hasapi_key} from './api-keys.js'
+import {get_api_key, has_api_key} from './api-keys.js'
 
 /**
  * Check if required API keys are set for a specific service
@@ -6,7 +6,7 @@ import {getapi_key, hasapi_key} from './api-keys.js'
  * @returns {Promise<boolean>} Whether the required key is set
  */
 export async function verifyapi_keyForService(service) {
-    const keyExists = await hasapi_key(service)
+    const keyExists = await has_api_key(service)
     return keyExists
 }
 
@@ -16,7 +16,7 @@ export async function verifyapi_keyForService(service) {
  * @returns {Promise<object>} Headers object with auth
  */
 export async function prepareAuthHeaders(service) {
-    const key = await getapi_key(service)
+    const key = await get_api_key(service)
 
     if (service === 'openai') {
         return {
@@ -25,7 +25,6 @@ export async function prepareAuthHeaders(service) {
         }
     }
 
-    // For Gemini, typically the key is sent as a query parameter
     return {
         'Content-Type': 'application/json',
     }

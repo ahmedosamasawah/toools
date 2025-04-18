@@ -6,40 +6,37 @@
 
     <RecordButtons {is_recording} onRecordingStateChange={handle_recording_state_change} />
     {#if recording}
-        <AudioPlayer {recording} {is_recording} {show_notification} />
-        <AudioSnipper {recording} onTrimmed={handle_trimmed_audio} {show_notification} />
+        <AudioPlayer {recording} {is_recording} />
+        <AudioSnipper {recording} onTrimmed={handle_trimmed_audio} />
     {/if}
 
-    <AudioImporter {show_notification} />
+    <AudioImporter />
 
     <RecordingsList />
 </main>
 
 <script>
-import AudioPlayer from '~/components/AudioPlayer.svelte'
-import AudioSnipper from '~/components/AudioSnipper.svelte'
-import RecordButtons from '~/components/AudioRecorder.svelte'
+import {show_notification} from '~/App.svelte'
 import AudioImporter from '~/components/AudioImporter.svelte'
+import AudioPlayer from '~/components/AudioPlayer.svelte'
+import RecordButtons from '~/components/AudioRecorder.svelte'
+import AudioSnipper from '~/components/AudioSnipper.svelte'
 import RecordingsList from '~/components/RecordingsList.svelte'
-
 import {
-    save_recording,
-    playback_state,
-    load_recordings,
     current_recording,
+    load_recordings,
+    playback_state,
     recording_progress,
+    save_recording,
 } from '~/features/recorder/recorder.js'
 
 /** @type {import('~/features/recorder/recorder').Recording | null} */
 let recording = $state(null)
-let current_time = $state(0)
 let is_recording = $state(false)
-
-let {show_notification = () => {}} = $props()
 
 current_recording.subscribe(value => (recording = value))
 recording_progress.subscribe(state => (is_recording = state.is_active))
-playback_state.subscribe(state => (current_time = state.current_time))
+playback_state.subscribe(() => {})
 
 /** @param {{is_recording: boolean}} event */
 const handle_recording_state_change = ({is_recording: value}) => (is_recording = value)

@@ -73,17 +73,18 @@
 </div>
 
 <script>
+import {Edit, Trash2} from '@lucide/svelte'
+
 import {
+    current_recording,
+    delete_recording,
+    load_recordings,
     loading,
     recordings,
-    load_recordings,
-    delete_recording,
     rename_recording,
-    current_recording,
     set_current_recording,
-} from '~/features/recorder/recorder'
-import {Trash2, Edit} from '@lucide/svelte'
-import {format_time, get_time_ago} from '~/features/recorder/utils'
+} from '~/features/recorder/recorder.js'
+import {format_time, get_time_ago} from '~/features/recorder/utils.js'
 
 let is_loading = $state(true)
 

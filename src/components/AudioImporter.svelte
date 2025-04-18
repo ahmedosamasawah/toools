@@ -34,17 +34,19 @@
 </div>
 
 <script>
-import FileDropzone from './FileDropzone.svelte'
-import {Mic, Import, Loader2} from '@lucide/svelte'
-import Button from '~/lib/components/ui/button/button.svelte'
+import {Import, Loader2, Mic} from '@lucide/svelte'
+
+import {show_notification} from '~/App.svelte'
 import {import_audio_file} from '~/features/recorder/recorder.js'
+import Button from '~/lib/components/ui/button/button.svelte'
+
+import FileDropzone from './FileDropzone.svelte'
 
 let is_importing = $state(false)
 let import_error = $state('')
 
 /** @type {File | null} */
 let selected_file = $state(null)
-let {show_notification = () => {}} = $props()
 
 async function handle_import() {
     if (!selected_file) {

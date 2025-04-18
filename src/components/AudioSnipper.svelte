@@ -24,7 +24,9 @@
                         controls={false}
                         preload="metadata"
                         bind:this={audio_element}
+                        onended={handle_audio_ended}
                         src={audio_url || recording.url}
+                        ontimeupdate={update_current_time}
                     ></audio>
                     <div class="flex flex-col gap-2">
                         <div class="flex justify-between text-xs text-gray-600">
@@ -136,13 +138,14 @@
 </div>
 
 <script>
-import {Loader2} from '@lucide/svelte'
-import {Play, Pause} from '@lucide/svelte'
-import * as FFmpeg from '~/features/recorder/ffmpeg'
+import {Loader2, Pause, Play} from '@lucide/svelte'
+
+import {show_notification} from '~/App.svelte'
+import * as FFmpeg from '~/features/recorder/ffmpeg.js'
 import {Button} from '$lib/components/ui/button/index.js'
 import ProgressBar from '$lib/components/ui/progress-bar/ProgressBar.svelte'
 
-let {recording, onTrimmed, show_notification = () => {}} = $props()
+let {recording, onTrimmed} = $props()
 
 let trim_end = $state(0)
 let trim_start = $state(0)
@@ -192,19 +195,6 @@ $effect(() => {
             audio_url = null
         }
         trimmed_result = null
-    }
-})
-
-$effect(() => {
-    const updateHandler = update_current_time
-    const endedHandler = handle_audio_ended
-
-    audio_element?.addEventListener('timeupdate', updateHandler)
-    audio_element?.addEventListener('ended', endedHandler)
-
-    return () => {
-        audio_element?.removeEventListener('timeupdate', updateHandler)
-        audio_element?.removeEventListener('ended', endedHandler)
     }
 })
 

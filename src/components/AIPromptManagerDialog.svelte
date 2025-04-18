@@ -8,7 +8,7 @@
         </Dialog.Header>
 
         <div class="mr-[-24px] pr-6">
-            <AIPromptManager {show_notification} />
+            <AIPromptManager />
         </div>
 
         <Dialog.Footer>
@@ -25,10 +25,9 @@ import AIPromptManager from './AIPromptManager.svelte'
 
 /**
  * @typedef {Object} Props
- * @property {any} [show_notification]
  * @property {boolean} [dialog_open]
  */
 
 /** @type {Props} */
-let {show_notification = () => {}, dialog_open = $bindable(false)} = $props()
+let {dialog_open = $bindable(false)} = $props()
 </script>

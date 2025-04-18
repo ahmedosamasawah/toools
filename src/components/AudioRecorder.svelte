@@ -33,13 +33,14 @@
 
 <script>
 import {Circle, Square} from '@lucide/svelte'
-import TimeDisplay from '$lib/components/ui/time-display'
+
 import {
-    save_recording,
-    stop_recording,
-    start_recording,
     recording_progress,
-} from '~/features/recorder/recorder'
+    save_recording,
+    start_recording,
+    stop_recording,
+} from '~/features/recorder/recorder.js'
+import TimeDisplay from '$lib/components/ui/time-display/index.js'
 
 let elapsed_time = $state(0)
 let {is_recording, onRecordingStateChange} = $props()

@@ -1,4 +1,5 @@
 import {
+    Binary,
     FileSearch,
     FileText,
     FileType,
@@ -109,5 +110,13 @@ export const routes = [
         icon: Radio,
         description: 'استخراج النصوص من الصور ومزامنة النص مع الصوت',
         component_name: 'SyncText',
+    },
+    {
+        id: 'unicode',
+        path: '/unicode',
+        title: 'أدوات Unicode',
+        icon: Binary,
+        description: 'أدوات للتعامل مع Unicode (تحويل رموز، عرض معلومات للحروف)',
+        component_name: 'Unicode',
     },
 ]

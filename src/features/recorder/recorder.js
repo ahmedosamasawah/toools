@@ -303,7 +303,6 @@ export const set_current_recording = recording => current_recording.set(recordin
 export const download_recording = recording => {
     if (!recording?.url || !recording?.name) return
 
-
     const a = document.createElement('a')
     a.href = recording.url
     a.download = `${recording.name}.webm`
