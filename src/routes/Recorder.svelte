@@ -7,12 +7,21 @@
     <RecordButtons {is_recording} onRecordingStateChange={handle_recording_state_change} />
     {#if recording}
         <AudioPlayer {recording} {is_recording} />
-        <AudioSnipper {recording} onTrimmed={handle_trimmed_audio} />
+        <div class="bg-card mb-4 rounded-lg border p-4 shadow-sm">
+            <h2 class="mb-4 text-xl font-semibold text-gray-800">قص الصوت</h2>
+            <AudioSnipper {recording} onTrimmed={handle_trimmed_audio} />
+        </div>
     {/if}
 
-    <AudioImporter />
+    <div class="bg-card mb-4 rounded-lg border p-4 shadow-sm">
+        <h2 class="mb-4 text-xl font-semibold text-gray-800">استيراد ملف صوتي</h2>
+        <AudioImporter />
+    </div>
 
-    <RecordingsList />
+    <div class="bg-card rounded-lg border p-4 shadow-sm">
+        <h2 class="mb-4 text-xl font-semibold text-gray-800">التسجيلات السابقة</h2>
+        <RecordingsList />
+    </div>
 </main>
 
 <script>

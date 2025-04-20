@@ -37,7 +37,7 @@
                         'audio/m4a',
                         'audio/flac',
                         'audio/x-hx-aac-adts',
-                        'video/mp4', // Some browsers classify MP4 audio as video/mp4
+                        'video/mp4',
                         '.mp3',
                         '.wav',
                         '.ogg',
@@ -431,6 +431,9 @@
                                                         {:else if result.processing_type === 'tasks'}
                                                             <ListTodo class="ml-2 h-3.5 w-3.5" />
                                                             <span>قائمة المهام</span>
+                                                        {:else if result.processing_type === 'clean'}
+                                                            <FileText class="ml-2 h-3.5 w-3.5" />
+                                                            <span>تحسين النص</span>
                                                         {/if}
                                                     </Badge>
 

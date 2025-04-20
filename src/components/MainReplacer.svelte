@@ -207,7 +207,7 @@
                                         ? 'bg-blue-100 text-blue-700'
                                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
                                     onclick={() => {
-                                        const updatedRepl = {
+                                        const updated_repl = {
                                             ...repl,
                                             search_is_regex: !repl.search_is_regex,
                                         }
@@ -215,7 +215,7 @@
                                             r => r.id === repl.id,
                                         )
                                         if (index >= 0) {
-                                            $replacer_state.repls[index] = updatedRepl
+                                            $replacer_state.repls[index] = updated_repl
                                             $replacer_state.repls = [...$replacer_state.repls]
                                         }
                                     }}
@@ -269,7 +269,7 @@
                                         ? 'bg-blue-100 text-blue-700'
                                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
                                     onclick={() => {
-                                        const updatedRepl = {
+                                        const updated_repl = {
                                             ...repl,
                                             replace_is_fn: !repl.replace_is_fn,
                                         }
@@ -277,7 +277,7 @@
                                             r => r.id === repl.id,
                                         )
                                         if (index >= 0) {
-                                            $replacer_state.repls[index] = updatedRepl
+                                            $replacer_state.repls[index] = updated_repl
                                             $replacer_state.repls = [...$replacer_state.repls]
                                         }
                                     }}
@@ -318,6 +318,81 @@
                 max_height={editor_shown ? 500 : 0}
             />
         </div>
+    </div>
+
+    <div class="mb-4 px-3 md:mb-6 md:px-6">
+        <div class="mb-4 flex flex-wrap items-center gap-2">
+            {#if show_snapshot_name_input}
+                <div class="flex flex-wrap items-center gap-2">
+                    <input
+                        type="text"
+                        bind:value={snapshot_name_input}
+                        class="rounded-md border border-gray-300 px-3 py-1.5 text-sm"
+                        placeholder="اسم الحالة"
+                    />
+                    <button
+                        class="rounded-md border border-green-500 bg-green-50 px-3 py-1.5 text-sm text-green-700 shadow-sm hover:bg-green-100"
+                        onclick={confirm_snapshot_save}
+                    >
+                        حفظ
+                    </button>
+                    <button
+                        class="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 shadow-sm hover:bg-gray-100"
+                        onclick={cancel_snapshot_save}
+                    >
+                        إلغاء
+                    </button>
+                </div>
+            {:else}
+                <button
+                    class="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 shadow-sm hover:bg-gray-100"
+                    onclick={start_snapshot_save}
+                    title="حفظ الحالة الحالية للمُخرج"
+                >
+                    حفظ الحالة الحالية
+                </button>
+            {/if}
+            {#if snapshots.length}
+                <span class="text-xs text-gray-500">({snapshots.length} حالة محفوظة)</span>
+            {/if}
+        </div>
+        {#if snapshots.length}
+            <div class="mb-4">
+                <div class="mb-2 text-sm font-semibold">الحالات المحفوظة:</div>
+                <ul class="flex flex-wrap gap-2">
+                    {#each snapshots as snap}
+                        <li class="flex items-center gap-1">
+                            <button
+                                class="rounded border px-2 py-1 text-xs {selected_snapshots.includes(
+                                    snap.id,
+                                )
+                                    ? 'border-blue-400 bg-blue-100 text-blue-800'
+                                    : 'border-gray-200 bg-white text-gray-700'}"
+                                onclick={() => select_snapshot(snap.id)}
+                                title="تحديد للمقارنة"
+                            >
+                                {snap.label}
+                            </button>
+                            <button
+                                class="text-red-400 hover:text-red-600"
+                                onclick={() => remove_snapshot(snap.id)}
+                                title="حذف">✕</button
+                            >
+                        </li>
+                    {/each}
+                </ul>
+            </div>
+        {/if}
+        {#if selected_snapshots.length === 2}
+            <div class="mb-4 rounded border border-blue-200 bg-blue-50 p-2">
+                <div class="mb-2 text-sm font-semibold text-blue-800">مقارنة بين حالتين:</div>
+                <Diff
+                    a={get_snapshot_by_id(selected_snapshots[0])?.output || ''}
+                    b={get_snapshot_by_id(selected_snapshots[1])?.output || ''}
+                    {pause_diffing}
+                />
+            </div>
+        {/if}
     </div>
 
     <div
@@ -422,6 +497,7 @@ import {
     rand_id,
     unescape_str,
 } from 'components/src/util.js'
+import * as kv from 'idb-keyval'
 
 import {show_notification} from '~/App.svelte'
 import {Button} from '$ui/button/index.js'
@@ -433,6 +509,8 @@ import CodeMirror from './CodeMirror.svelte'
 import CodeMirrorPlain from './CodeMirrorPlain.svelte'
 import ImportExport from './ImportExport.svelte'
 import ReplPresets from './ReplPresets.svelte'
+
+const SNAPSHOTS_STORAGE_KEY_PREFIX = 'replacer_snapshot_'
 
 /**
  * @property {boolean} enabled
@@ -659,6 +737,89 @@ function remove_repl(i) {
     // if (!confirm('إزالة؟')) return
     $replacer_state.repls.splice(i, 1)
     $replacer_state.repls = $replacer_state.repls
+}
+
+/**
+ * @type {any[]}
+ */
+let snapshots = $state([])
+let snapshot_name_input = $state('')
+let show_snapshot_name_input = $state(false)
+/** @type {string[]} */
+let selected_snapshots = $state([])
+
+async function load_snapshots() {
+    const all_keys = await kv.keys()
+    const snapshot_keys = all_keys.filter(
+        k => typeof k === 'string' && k.startsWith(SNAPSHOTS_STORAGE_KEY_PREFIX),
+    )
+    const loaded = await Promise.all(snapshot_keys.map(k => kv.get(k)))
+    snapshots = loaded.filter(Boolean).sort((a, b) => a.ts - b.ts)
+}
+
+// Initialize snapshots from storage when component mounts
+$effect(() => {
+    load_snapshots()
+})
+
+function start_snapshot_save() {
+    snapshot_name_input = `حالة ${snapshots.length + 1}`
+    show_snapshot_name_input = true
+}
+
+async function confirm_snapshot_save() {
+    const id = `snapshot_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
+    const key = `${SNAPSHOTS_STORAGE_KEY_PREFIX}${id}`
+    const new_snapshot = {
+        id,
+        ts: Date.now(),
+        output,
+        label: snapshot_name_input || `حالة ${snapshots.length + 1}`,
+    }
+
+    try {
+        await kv.set(key, new_snapshot)
+        snapshots = [...snapshots, new_snapshot]
+        show_snapshot_name_input = false
+        show_notification('تم حفظ الحالة', 'success')
+    } catch {
+        show_notification('فشل في حفظ الحالة', 'error')
+    }
+}
+
+async function cancel_snapshot_save() {
+    show_snapshot_name_input = false
+}
+
+/**
+ * @param {string} id
+ */
+async function remove_snapshot(id) {
+    const key = `${SNAPSHOTS_STORAGE_KEY_PREFIX}${id}`
+    snapshots = snapshots.filter(s => s.id !== id)
+    selected_snapshots = selected_snapshots.filter(sid => sid !== id)
+
+    await kv.del(key)
+}
+
+/**
+ * @param {string} id
+ */
+function select_snapshot(id) {
+    if (selected_snapshots.includes(id)) {
+        selected_snapshots = selected_snapshots.filter(sid => sid !== id)
+    } else if (selected_snapshots.length < 2) {
+        selected_snapshots = [...selected_snapshots, id]
+    } else {
+        selected_snapshots = [selected_snapshots[1], id]
+    }
+}
+
+/**
+ * @param {string} id
+ */
+function get_snapshot_by_id(id) {
+    return snapshots.find(s => s.id === id)
 }
 </script>
 

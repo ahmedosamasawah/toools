@@ -1,22 +1,39 @@
 <div class="mb-6 rounded-lg bg-white p-4 shadow-sm">
-    <h3 class="mb-4 text-lg font-semibold text-gray-800">قص الصوت</h3>
-
     {#if !is_FFmpeg_loaded}
         <div class="space-y-4 p-4 text-center">
-            <p class="text-gray-600">اضغط على الزر لتحميل FFmpeg (~25 ميجابايت)</p>
+            <p class="text-gray-600">
+                لاستخدام أداة قص الصوت، يجب تحميل محرك FFmpeg (~25 ميجابايت)
+            </p>
 
-            <Button class="place-self-center" onclick={load_ffmpeg} disabled={is_processing}>
-                {is_processing ? 'جاري التحميل...' : 'تحميل FFmpeg'}
+            <Button
+                variant="default"
+                onclick={load_ffmpeg}
+                disabled={is_processing}
+                class="place-self-center"
+            >
+                {#if is_processing}
+                    <Loader2 class="ml-2 h-4 w-4 animate-spin" />
+                    <span>جاري التحميل...</span>
+                {:else}
+                    <Download class="ml-2 h-4 w-4" />
+                    <span>تحميل FFmpeg</span>
+                {/if}
             </Button>
         </div>
     {:else if is_processing}
         <div class="flex flex-col items-center justify-center space-y-3 py-4">
             <Loader2 class="h-8 w-8 animate-spin text-blue-500" />
+            <p class="text-blue-700">{processing_message || 'جاري معالجة الصوت...'}</p>
         </div>
     {:else if recording?.blob && is_FFmpeg_loaded}
         <div class="space-y-4">
             <div class="rounded-md bg-blue-50 p-4">
-                <p class="mb-4 text-blue-700">قص "{recording.name}"</p>
+                <div class="mb-4 flex items-center justify-between">
+                    <p class="font-medium text-blue-700">قص "{recording.name}"</p>
+                    <Badge variant="outline" class="bg-blue-100 text-blue-700">
+                        {format_time(recording.duration)}
+                    </Badge>
+                </div>
 
                 <div class="mb-4" dir="ltr">
                     <audio
@@ -31,21 +48,19 @@
                     <div class="flex flex-col gap-2">
                         <div class="flex justify-between text-xs text-gray-600">
                             <span>{format_time(trim_start)}</span>
-                            <span
-                                >معاينة المقطع | مدة المقطع: {format_time(
-                                    trim_end - trim_start,
-                                )}</span
-                            >
+                            <span>
+                                معاينة المقطع | مدة المقطع: {format_time(trim_end - trim_start)}
+                            </span>
                             <span>{format_time(trim_end)}</span>
                         </div>
                         <ProgressBar
-                            value={current_time}
-                            max={recording.duration}
                             height="12px"
                             interactive={false}
-                            on_seek={handle_preview_seek}
+                            value={current_time}
                             progress_color="#2563eb"
+                            max={recording.duration}
                             background_color="#e5e7eb"
+                            on_seek={handle_preview_seek}
                         />
                         <div class="mt-1 flex justify-center gap-2">
                             <button
@@ -63,18 +78,23 @@
                     </div>
                 </div>
 
-                <div class="mb-4 flex w-full flex-wrap items-center justify-center gap-2" dir="ltr">
-                    <div class="flex w-full flex-col items-center gap-2 sm:w-[48%]">
-                        <div class="flex flex-row-reverse items-center gap-2">
-                            <label for="trim-start" class="block text-sm font-medium text-gray-700">
-                                البداية
-                            </label>
-                            <input
-                                type="text"
+                <div
+                    class="mb-4 grid w-full grid-cols-1 items-center gap-4 sm:grid-cols-2"
+                    dir="ltr"
+                >
+                    <div class="flex w-full flex-col items-center gap-2">
+                        <div class="flex w-full flex-row-reverse items-center gap-2">
+                            <Label
+                                for="trim-start"
+                                class="text-sm font-medium whitespace-nowrap text-gray-700"
+                            >
+                                بداية القص
+                            </Label>
+                            <Input
                                 id="trim-start"
                                 value={format_time(trim_start)}
-                                oninput={e => handle_time_input(e, 'start')}
-                                class="block w-14 rounded-md border-gray-300 text-center shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                oninput={(/** @type Event */ e) => handle_time_input(e, 'start')}
+                                class="block w-24 rounded-md border-gray-300 text-center shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                             />
                         </div>
                         <ProgressBar
@@ -87,17 +107,19 @@
                             on_seek={start_seek_handler}
                         />
                     </div>
-                    <div class="flex w-full flex-col items-center gap-2 sm:w-[48%]">
-                        <div class="flex flex-row-reverse items-center gap-2">
-                            <label for="trim-end" class="block text-sm font-medium text-gray-700">
-                                النهاية
-                            </label>
-                            <input
-                                type="text"
+                    <div class="flex w-full flex-col items-center gap-2">
+                        <div class="flex w-full flex-row-reverse items-center gap-2">
+                            <Label
+                                for="trim-end"
+                                class="text-sm font-medium whitespace-nowrap text-gray-700"
+                            >
+                                نهاية القص
+                            </Label>
+                            <Input
                                 id="trim-end"
                                 value={format_time(trim_end)}
-                                oninput={e => handle_time_input(e, 'end')}
-                                class="block w-14 rounded-md border-gray-300 text-center shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                oninput={(/** @type Event */ e) => handle_time_input(e, 'end')}
+                                class="block w-24 rounded-md border-gray-300 text-center shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                             />
                         </div>
                         <ProgressBar
@@ -112,23 +134,53 @@
                     </div>
                 </div>
 
+                <div class="flex flex-col space-y-2">
+                    <Label for="recording-name" class="text-sm font-medium text-gray-700">
+                        اسم المقطع المقصوص
+                    </Label>
+                    <Input
+                        id="recording-name"
+                        placeholder="اسم المقطع المقصوص"
+                        oninput={(/** @type {{ target: { value: string; }; }} */ e) =>
+                            (trimmed_name = e.target.value)}
+                        value={trimmed_name || `${recording.name} (مقصوص)`}
+                    />
+                </div>
+
                 <Button
                     onclick={trim_audio}
                     class="mt-6 w-full justify-center place-self-end sm:w-auto"
                     disabled={is_processing || trim_start >= trim_end}
                 >
+                    <Scissors class="ml-2 h-4 w-4" />
                     قص الصوت
                 </Button>
             </div>
 
             {#if trimmed_result}
                 <div class="rounded-md bg-green-50 p-4">
-                    <p class="mb-2 text-green-700">
-                        تم القص بنجاح! <span class="text-sm text-gray-600"
+                    <div class="mb-2 flex items-center justify-between">
+                        <p class="font-medium text-green-700">تم القص بنجاح!</p>
+                        <span class="text-sm text-gray-600"
                             >({format_time(trimmed_result.duration)})</span
                         >
-                    </p>
-                    <Button onclick={() => save_trimmed_audio()}>حفظ الصوت المقصوص</Button>
+                    </div>
+
+                    <div class="flex flex-col gap-2 sm:flex-row">
+                        <Button onclick={() => save_trimmed_audio()} class="flex-1">
+                            <Save class="ml-2 h-4 w-4" />
+                            حفظ الصوت المقصوص
+                        </Button>
+
+                        <Button
+                            variant="outline"
+                            onclick={() => preview_trimmed_audio()}
+                            class="flex-1"
+                        >
+                            <Play class="ml-2 h-4 w-4" />
+                            معاينة المقطع المقصوص
+                        </Button>
+                    </div>
                 </div>
             {/if}
         </div>
@@ -138,11 +190,14 @@
 </div>
 
 <script>
-import {Loader2, Pause, Play} from '@lucide/svelte'
+import {Download, Loader2, Pause, Play, Save, Scissors} from '@lucide/svelte'
 
 import {show_notification} from '~/App.svelte'
 import * as FFmpeg from '~/features/recorder/ffmpeg.js'
+import {Badge} from '$lib/components/ui/badge/index.js'
 import {Button} from '$lib/components/ui/button/index.js'
+import {Input} from '$lib/components/ui/input/index.js'
+import {Label} from '$lib/components/ui/label/index.js'
 import ProgressBar from '$lib/components/ui/progress-bar/ProgressBar.svelte'
 
 let {recording, onTrimmed} = $props()
@@ -151,6 +206,8 @@ let trim_end = $state(0)
 let trim_start = $state(0)
 let current_time = $state(0)
 let is_playing = $state(false)
+let trimmed_name = $state('')
+let processing_message = $state('')
 
 /** @type {HTMLAudioElement|null} */
 let audio_element = $state(null)
@@ -189,6 +246,7 @@ $effect(() => {
         trim_end = recording?.duration || 0
         audio_blob = recording?.blob || null
         previous_recording_id = current_recording_id
+        trimmed_name = recording ? `${recording.name} (مقصوص)` : ''
 
         if (audio_url) {
             URL.revokeObjectURL(audio_url)
@@ -304,10 +362,12 @@ function set_time_from_format(value, type) {
 
 async function load_ffmpeg() {
     is_processing = true
+    processing_message = 'جاري تحميل محرك FFmpeg...'
     await FFmpeg.init()
     is_FFmpeg_loaded = true
-
+    processing_message = ''
     is_processing = false
+    show_notification('تم تحميل FFmpeg بنجاح', 'success')
 }
 
 async function trim_audio() {
@@ -317,6 +377,7 @@ async function trim_audio() {
     }
 
     is_processing = true
+    processing_message = 'جاري قص الصوت...'
 
     const trimmed_audio_url = await FFmpeg.trim_audio(
         audio_blob,
@@ -339,13 +400,28 @@ async function trim_audio() {
     }
 
     show_notification('تم قص الصوت بنجاح', 'success')
+    processing_message = ''
     is_processing = false
+}
+
+function preview_trimmed_audio() {
+    if (!trimmed_result || !audio_element) return
+
+    if (is_playing) {
+        audio_element.pause()
+        is_playing = false
+    }
+
+    audio_element.src = trimmed_result.url
+    audio_element.currentTime = 0
+    audio_element.play()
+    is_playing = true
 }
 
 function save_trimmed_audio() {
     if (!trimmed_result || !recording) return
 
-    const new_name = `${recording.name} (مقصوص)`
+    const new_name = trimmed_name.trim() || `${recording.name} (مقصوص)`
     onTrimmed?.({
         blob: trimmed_result.blob,
         duration: trimmed_result.duration,

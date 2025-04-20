@@ -1,6 +1,4 @@
 <div class="mb-6 rounded-lg bg-white p-4 shadow-sm">
-    <h2 class="mb-4 text-xl font-semibold text-gray-800">التسجيلات السابقة</h2>
-
     {#if is_loading}
         <div class="flex h-32 flex-col items-center justify-center gap-4 text-gray-500">
             <div

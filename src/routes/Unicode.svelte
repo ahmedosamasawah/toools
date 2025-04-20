@@ -182,11 +182,74 @@
                             bind:value={arabic_filter}
                         />
                     </div>
-
+                    <!-- Filter Buttons -->
+                    <div class="mb-2 flex flex-wrap gap-2">
+                        <Button
+                            variant={active_riwaya === 'all' ? 'default' : 'outline'}
+                            size="sm"
+                            onclick={() => set_riwaya_filter('all')}>الكل</Button
+                        >
+                        <Button
+                            variant={active_riwaya === 'common' ? 'default' : 'outline'}
+                            size="sm"
+                            onclick={() => set_riwaya_filter('common')}
+                            >المشترك بين جميع الروايات</Button
+                        >
+                        <Button
+                            variant={active_riwaya === 'hafs' ? 'default' : 'outline'}
+                            size="sm"
+                            onclick={() => set_riwaya_filter('hafs')}>حفص</Button
+                        >
+                        <Button
+                            variant={active_riwaya === 'warsh' ? 'default' : 'outline'}
+                            size="sm"
+                            onclick={() => set_riwaya_filter('warsh')}>ورش</Button
+                        >
+                        <Button
+                            variant={active_riwaya === 'qaloon' ? 'default' : 'outline'}
+                            size="sm"
+                            onclick={() => set_riwaya_filter('qaloon')}>قالون</Button
+                        >
+                        <Button
+                            variant={active_riwaya === 'douri' ? 'default' : 'outline'}
+                            size="sm"
+                            onclick={() => set_riwaya_filter('douri')}>الدوري</Button
+                        >
+                        <Button
+                            variant={active_riwaya === 'sousi' ? 'default' : 'outline'}
+                            size="sm"
+                            onclick={() => set_riwaya_filter('sousi')}>السويسي</Button
+                        >
+                        <Button
+                            variant={active_riwaya === 'shuba' ? 'default' : 'outline'}
+                            size="sm"
+                            onclick={() => set_riwaya_filter('shuba')}>شعبة</Button
+                        >
+                        <Button
+                            variant={active_riwaya === 'qunbul' ? 'default' : 'outline'}
+                            size="sm"
+                            onclick={() => set_riwaya_filter('qunbul')}>قنبل</Button
+                        >
+                        <Button
+                            variant={active_riwaya === 'bazzi' ? 'default' : 'outline'}
+                            size="sm"
+                            onclick={() => set_riwaya_filter('bazzi')}>البزي</Button
+                        >
+                        <Button
+                            variant={active_riwaya === 'maghribi' ? 'default' : 'outline'}
+                            size="sm"
+                            onclick={() => set_riwaya_filter('maghribi')}>مغربي</Button
+                        >
+                        <Button
+                            variant={active_riwaya === 'sharqi' ? 'default' : 'outline'}
+                            size="sm"
+                            onclick={() => set_riwaya_filter('sharqi')}>شرقي</Button
+                        >
+                    </div>
                     <div
                         class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
                     >
-                        {#each filtered_arabic_chars as char}
+                        {#each filtered_arabic_chars() as char}
                             <div
                                 class="hover:bg-muted/30 flex cursor-pointer flex-col items-center rounded-md border p-3"
                                 onclick={() => open_char_modal(char)}
@@ -210,6 +273,21 @@
                                 <div class="text-muted-foreground text-xs">
                                     {char.script || 'Arabic'}
                                 </div>
+                                <!-- Riwayat and Orthography Info -->
+                                <div class="text-muted-foreground text-xs">
+                                    {char.riwayat ? `روايات: ${char.riwayat.join(', ')}` : ''}
+                                    {char.orthography ? ` • نمط: ${char.orthography}` : ''}
+                                </div>
+                                <!-- Link to codepoints.net -->
+                                {#if char.code}
+                                    <a
+                                        href={`https://codepoints.net/U+${char.code.toString(16).toUpperCase()}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="mt-1 text-xs text-blue-500 underline"
+                                        onclick={e => e.stopPropagation()}>codepoints.net</a
+                                    >
+                                {/if}
                             </div>
                         {/each}
                     </div>
@@ -238,21 +316,21 @@
                 <div class="text-muted-foreground mt-1 text-xs">
                     {ayah_example.surah} - آية {ayah_example.number}
                 </div>
-                <Button
-                    class="mt-2"
-                    variant="outline"
-                    size="sm"
-                    onclick={() => copy_to_clipboard(ayah_example.ayah)}
-                >
-                    <Copy class="ml-2 h-3.5 w-3.5" />
-                    نسخ الآية
-                </Button>
             </div>
         {:else}
             <div class="text-muted-foreground mt-4 text-center">لا يوجد مثال متاح لهذا الحرف.</div>
         {/if}
-        <DialogClose class="flex justify-end-safe">
-            <Button class="mt-4" variant="outline">إغلاق</Button>
+        <Button
+            class="mt-2 w-fit"
+            variant="outline"
+            size="sm"
+            onclick={() => copy_to_clipboard(selected_char.char)}
+        >
+            <Copy class="ml-2 h-3.5 w-3.5" />
+            نسخ الحرف
+        </Button>
+        <DialogClose class="flex justify-between">
+            <Button class="mt-2" size="sm" variant="outline">إغلاق</Button>
         </DialogClose>
     </DialogContent>
 </Dialog>
@@ -450,17 +528,45 @@ let show_fancy_styles = $derived(font_text && !is_arabic(font_text))
 
 let analysis_text = $state('')
 let arabic_filter = $state('')
+let active_riwaya = $state('all')
 
-let filtered_arabic_chars = $derived(
-    arabic_filter
-        ? arabic_chars_data.filter(
-              char =>
-                  char.char.includes(arabic_filter) ||
-                  char.name.includes(arabic_filter) ||
-                  char.code.toString(16).toUpperCase().includes(arabic_filter.toUpperCase()),
-          )
-        : arabic_chars_data,
-)
+/**
+ * @param {string} val
+ */
+function set_riwaya_filter(val) {
+    active_riwaya = val
+}
+
+// Filtering logic
+let filtered_arabic_chars = $derived(() => {
+    let chars = arabic_chars_data
+    if (arabic_filter) {
+        chars = chars.filter(
+            char =>
+                char.char.includes(arabic_filter) ||
+                char.name.includes(arabic_filter) ||
+                (char.code &&
+                    char.code.toString(16).toUpperCase().includes(arabic_filter.toUpperCase())),
+        )
+    }
+    if (active_riwaya === 'all') {
+        return chars
+    }
+    if (active_riwaya === 'common') {
+        return chars.filter(char => char.riwayat && char.riwayat.includes('common'))
+    }
+    if (
+        ['hafs', 'warsh', 'qaloon', 'douri', 'sousi', 'shuba', 'qunbul', 'bazzi'].includes(
+            active_riwaya,
+        )
+    ) {
+        return chars.filter(char => char.riwayat && char.riwayat.includes(active_riwaya))
+    }
+    if (['maghribi', 'sharqi'].includes(active_riwaya)) {
+        return chars.filter(char => char.orthography && char.orthography === active_riwaya)
+    }
+    return chars
+})
 
 let selected_char = $state(null)
 let show_char_modal = $state(false)

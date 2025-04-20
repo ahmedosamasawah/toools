@@ -319,8 +319,8 @@ export async function copy_audio_to_clipboard(recording) {
     return true
 }
 
-/** @param {File} file @returns {Promise<Recording|null>} */
-export const import_audio_file = async file => {
+/** @param {File} file @param {string} [customName] @returns {Promise<Recording|null>} */
+export const import_audio_file = async (file, customName = '') => {
     loading.set(true)
 
     const extension = file.name.split('.').pop()?.toLowerCase() || ''
@@ -329,7 +329,9 @@ export const import_audio_file = async file => {
     const result = await convert_audio(blob, extension)
 
     const name =
-        file.name.replace(/\.[^/.]+$/, '') || `تسجيل مستورد ${new Date().toLocaleTimeString()}`
+        customName ||
+        file.name.replace(/\.[^/.]+$/, '') ||
+        `تسجيل مستورد ${new Date().toLocaleTimeString()}`
 
     const id = await save_recording(result.blob, result.duration, name)
 

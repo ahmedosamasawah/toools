@@ -1,4 +1,5 @@
 import {
+    AudioWaveform,
     Binary,
     FileSearch,
     FileText,
@@ -38,6 +39,14 @@ export const routes = [
         icon: Headphones,
         description: 'تحويل الملفات الصوتية إلى نص مكتوب باستخدام تقنيات الذكاء الاصطناعي',
         component_name: 'AudioTranscription',
+    },
+    {
+        id: 'audio-tools',
+        path: '/audio-tools',
+        title: 'أدوات الصوت',
+        icon: AudioWaveform,
+        description: 'استيراد وقص ومعالجة الملفات الصوتية',
+        component_name: 'AudioTools',
     },
     {
         id: 'text-formatting',
