@@ -1,7 +1,7 @@
 import * as kv from 'idb-keyval'
 import {derived, get, writable} from 'svelte/store'
 
-import {convert_audio} from './ffmpeg.js'
+import {compress_audio, convert_audio} from './ffmpeg.js'
 import {format_time} from './utils.js'
 
 /**
@@ -319,14 +319,18 @@ export async function copy_audio_to_clipboard(recording) {
     return true
 }
 
-/** @param {File} file @param {string} [customName] @returns {Promise<Recording|null>} */
+/** @param {File} file @param {string} [customName] */
 export const import_audio_file = async (file, customName = '') => {
     loading.set(true)
 
+    let result
+    const SIZE_THRESHOLD = 25 * 1024 * 1024
     const extension = file.name.split('.').pop()?.toLowerCase() || ''
 
     const blob = new Blob([file], {type: file.type})
-    const result = await convert_audio(blob, extension)
+
+    if (file.size > SIZE_THRESHOLD) result = await compress_audio(blob, extension)
+    else result = await convert_audio(blob, extension)
 
     const name =
         customName ||

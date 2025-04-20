@@ -117,7 +117,16 @@ async function handle_import() {
 
     import_error = ''
     is_importing = true
-    import_status = {type: 'info', message: 'جاري معالجة الملف الصوتي...'}
+
+    const SIZE_THRESHOLD = 25 * 1024 * 1024
+
+    import_status = {
+        type: 'info',
+        message:
+            selected_file.size > SIZE_THRESHOLD
+                ? 'الملف كبير الحجم. جاري ضغط الصوت للحصول على أداء أفضل...'
+                : 'جاري معالجة الملف الصوتي...',
+    }
 
     const custom_name = file_name.trim()
         ? file_name.trim()

@@ -39,9 +39,15 @@
                                     options_open = false
                                 }}
                             >
-                                {@html format_arrow(action[0])}
+                                {@html typeof action[0] === 'string' ? format_arrow(action[0]) : ''}
                             </button>
                         {/each}
+                        <button
+                            class="w-full rounded-md px-2 py-1 text-right hover:bg-gray-100"
+                            onclick={convert_numbers_to_arabic}
+                        >
+                            تحويل الأرقام إلى العربية
+                        </button>
                     </div>
                 </div>
             {/if}
@@ -57,7 +63,7 @@
         </button>
 
         <button
-            onclick={() => (enhancement_options_open = !enhancement_options_open)}
+            onclick={toggle_enhancement_options}
             class="ml-auto flex cursor-pointer items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 hover:bg-gray-100"
         >
             <Icon src={SlidersVertical} class=" h-4 w-4" />
@@ -81,6 +87,7 @@
                                     id="option-{replacement[0]}"
                                     bind:checked={replacement_options[replacement[0]]}
                                     class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    onchange={save_replacement_options}
                                 />
                                 <label for="option-{replacement[0]}" class="cursor-pointer text-sm">
                                     {@html format_arrow(replacement[0])}
@@ -96,6 +103,13 @@
         </div>
     {/if}
 </div>
+
+{#if diff_before_after}
+    <div class="my-6 rounded-md border border-blue-200 bg-blue-50 p-4 font-mono text-sm">
+        <div class="mb-2 font-bold text-blue-700">مقارنة قبل/بعد:</div>
+        <div>{@html diff_before_after}</div>
+    </div>
+{/if}
 
 <div class="my-8 border-t"></div>
 
@@ -125,8 +139,13 @@
 </div>
 
 <script>
+/**
+ * @typedef {(substring: string, ...args: any[]) => string} ReplaceFunction
+ * @typedef {[RegExp, string|ReplaceFunction]} ReplacementPair
+ */
 import {SlidersVertical, Undo} from '@steeze-ui/lucide-icons'
 import {Icon} from '@steeze-ui/svelte-icon'
+import {get, set} from 'idb-keyval'
 import {slide} from 'svelte/transition'
 
 import {show_notification} from '~/App.svelte'
@@ -135,14 +154,8 @@ import Button from '~/lib/components/ui/button/button.svelte'
 import {text_area_store} from '../stores.svelte.js'
 import replacements from '../util/replacements.js'
 
-/** @typedef {(substring: string, ...args: string[]) => string} ReplaceFunction */
-/** @typedef {[RegExp, string | ReplaceFunction]} ReplacementPair */
-/** @typedef {[string, ReplacementPair | ReplacementPair[], number?]} ReplacementRule */
-/** @typedef {[string, ReplacementRule[]]} ReplacementGroup */
-
 const EDITOR_ID = 'text-cleaner'
 
-// Get the stored text value through the store
 const stored_text = text_area_store.get_text(EDITOR_ID)
 
 /** @type {string} */
@@ -154,7 +167,16 @@ let options_open = $state(false)
 /** @type {boolean} */
 let enhancement_options_open = $state(false)
 /** @type {Record<string, boolean>} */
-let replacement_options = $state(init_replacement_options())
+let replacement_options = $state({})
+
+;(async () => {
+    const shown = await get('textcleaner-enhancement-shown')
+    if (!shown) {
+        enhancement_options_open = true
+        await set('textcleaner-enhancement-shown', '1')
+    }
+    replacement_options = await init_replacement_options()
+})()
 
 /** @param {Event} event */
 function handle_text_input(event) {
@@ -164,18 +186,30 @@ function handle_text_input(event) {
     }
 }
 
-/** @returns {Record<string, boolean>} */
-function init_replacement_options() {
+/** @returns {Promise<Record<string, boolean>>} */
+async function init_replacement_options() {
     /** @type {Record<string, boolean>} */
     const options = {}
-    /** @type {ReplacementGroup[]} */
     const typed_replacements = replacements
-    typed_replacements.forEach(([_, rules]) =>
-        rules.forEach(([name, _, enabled]) => {
-            options[name] = enabled !== 0
-        }),
-    )
+    for (const [_, rules] of typed_replacements) {
+        for (const [name, _, enabled] of rules) {
+            const stored = await get('textcleaner-opt-' + name)
+            if (stored !== undefined && stored !== null) {
+                options[name] = stored === true || stored === 'true'
+            } else {
+                options[name] = enabled !== 0
+            }
+        }
+    }
+    if (!options['إصلاح التقاء الساكنين (سكون قبل ألف)'])
+        options['إصلاح التقاء الساكنين (سكون قبل ألف)'] = true
     return options
+}
+
+async function save_replacement_options() {
+    for (const [k, v] of Object.entries(replacement_options)) {
+        await set('textcleaner-opt-' + k, v)
+    }
 }
 
 /** @type {[string, ReplacementPair[]][]} */
@@ -219,11 +253,18 @@ const copy_items = {
 const fix_ar_encoding = s =>
     new TextDecoder('windows-1256').decode(new Uint8Array([...s].map(c => c.charCodeAt(0))))
 
+function convert_numbers_to_arabic() {
+    add_to_undo_stack(text)
+    text = text.replace(/\d+(\.\d+)?/g, m => Intl.NumberFormat('ar-SA').format(Number(m)))
+    text_area_store.update(EDITOR_ID, text)
+    copy_to_clipboard(text)
+}
+
+let diff_before_after = $state('')
 function process_text() {
     add_to_undo_stack(text)
     let processed_text = text
 
-    /** @type {ReplacementGroup[]} */
     const typed_replacements = replacements
     typed_replacements.forEach(([_, rules]) => {
         rules.forEach(([name, pattern]) => {
@@ -243,9 +284,16 @@ function process_text() {
         })
     })
 
+    if (replacement_options['إصلاح التقاء الساكنين (سكون قبل ألف)']) {
+        processed_text = processed_text.replace(/ْا/g, 'ِا')
+    }
+
+    diff_before_after = diff_html(text, processed_text)
+
     text = processed_text
     text_area_store.update(EDITOR_ID, text)
     copy_to_clipboard(processed_text)
+    save_replacement_options()
 }
 
 /** @param {[string, ReplacementPair[]]} action */
@@ -258,6 +306,8 @@ function apply_action([_, patterns]) {
             processed_text = processed_text.replace(regex, /** @type {ReplaceFunction} */ (replace))
         else processed_text = processed_text.replace(regex, replace)
     })
+
+    diff_before_after = diff_html(text, processed_text)
 
     text = processed_text
     text_area_store.update(EDITOR_ID, text)
@@ -284,16 +334,49 @@ function undo() {
 
 /** @param {string} text */
 const format_arrow = text => text.replace(/➔/g, '<span class="arrow">➔</span>')
+
+/**
+ * @param {string} before
+ * @param {string} after
+ */
+function diff_html(before, after) {
+    if (before === after) return '<span class="text-green-700">لا تغييرات</span>'
+    const b = before.split(/(\s+)/)
+    const a = after.split(/(\s+)/)
+    let out = ''
+    let i = 0,
+        j = 0
+    while (i < b.length || j < a.length) {
+        if (b[i] === a[j]) {
+            out += b[i] || ''
+            i++
+            j++
+        } else if (a[j] && !b.includes(a[j])) {
+            out += `<span style="background:#d1fae5;color:#065f46">${a[j]}</span>`
+            j++
+        } else if (b[i] && !a.includes(b[i])) {
+            out += `<span style="background:#fee2e2;color:#991b1b;text-decoration:line-through">${b[i]}</span>`
+            i++
+        } else {
+            out += `<span style="background:#fee2e2;color:#991b1b;text-decoration:line-through">${b[i] || ''}</span>`
+            out += `<span style="background:#d1fae5;color:#065f46">${a[j] || ''}</span>`
+            i++
+            j++
+        }
+    }
+    return out
+}
+
+function toggle_enhancement_options() {
+    enhancement_options_open = !enhancement_options_open
+    if (enhancement_options_open) {
+        set('textcleaner-enhancement-shown', '1')
+    }
+}
 </script>
 
 <style>
 textarea {
     font-family: 'Kitab', system-ui, sans-serif;
 }
-/* .arrow {
-    transform: scale(-1, 1);
-    display: inline-block;
-    font-size: 0.6rem;
-    color: #666;
-  } */
 </style>
