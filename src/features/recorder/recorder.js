@@ -319,18 +319,21 @@ export async function copy_audio_to_clipboard(recording) {
     return true
 }
 
-/** @param {File} file @param {string} [customName] */
-export const import_audio_file = async (file, customName = '') => {
+/** @param {File} file @param {string} [customName] @param {{ bitrate?: string }} [options] */
+export const import_audio_file = async (file, customName = '', options = {}) => {
     loading.set(true)
 
     let result
     const SIZE_THRESHOLD = 25 * 1024 * 1024
     const extension = file.name.split('.').pop()?.toLowerCase() || ''
 
-    const blob = new Blob([file], {type: file.type})
-
-    if (file.size > SIZE_THRESHOLD) result = await compress_audio(blob, extension)
-    else result = await convert_audio(blob, extension)
+    if (file.size > SIZE_THRESHOLD) {
+        const bitrate = options.bitrate || '64k'
+        result = await compress_audio(file, bitrate)
+    } else {
+        const blob = new Blob([file], {type: file.type})
+        result = await convert_audio(blob, extension)
+    }
 
     const name =
         customName ||

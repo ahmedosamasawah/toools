@@ -1,6 +1,7 @@
 import {
     AudioWaveform,
     Binary,
+    BookOpen,
     FileSearch,
     FileText,
     FileType,
@@ -127,5 +128,13 @@ export const routes = [
         icon: Binary,
         description: 'أدوات للتعامل مع Unicode (تحويل رموز، عرض معلومات للحروف)',
         component_name: 'Unicode',
+    },
+    {
+        id: 'quraan',
+        path: '/quraan',
+        title: 'أدوات القرآن',
+        icon: BookOpen,
+        description: 'تصفح القرآن الكريم وعرض نصوصه بخطوط مختلفة',
+        component_name: 'QuraanTools',
     },
 ]

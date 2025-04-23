@@ -16,6 +16,51 @@ export async function init() {
     })
 }
 
+/** @param {File} audio_file @returns {Promise<number>} */
+export async function detect_bitrate(audio_file) {
+    if (!ffmpeg) await init()
+
+    await ffmpeg?.createDir('/input')
+
+    // @ts-ignore
+    await ffmpeg?.mount('WORKERFS', {files: [audio_file]}, '/input')
+
+    const input_path = `/input/${audio_file.name}`
+    const output_file = 'bitrate_output.json'
+
+    await ffmpeg?.ffprobe([
+        '-v',
+        'error',
+        '-select_streams',
+        'a:0',
+        '-show_entries',
+        'stream=bit_rate',
+        '-of',
+        'json',
+        input_path,
+        '-o',
+        output_file,
+    ])
+
+    let detected_bitrate = 0
+
+    const data = await ffmpeg?.readFile(output_file)
+
+    if (data) {
+        // @ts-ignore
+        const jsonString = new TextDecoder().decode(data)
+        const json_result = JSON.parse(jsonString)
+        if (json_result.streams && json_result.streams[0] && json_result.streams[0].bit_rate)
+            detected_bitrate = Math.round(parseInt(json_result.streams[0].bit_rate, 10) / 1000) || 0
+    }
+
+    // await ffmpeg?.unmount('/input')
+    // await ffmpeg?.deleteDir('/input')
+    // await ffmpeg?.deleteFile(output_file)
+
+    return detected_bitrate
+}
+
 /** @param {Blob} audio_file @param {string} start_time @param {string} end_time @returns {Promise<string>} */
 export async function trim_audio(audio_file, start_time, end_time) {
     if (!ffmpeg) await init()
@@ -91,31 +136,31 @@ export async function convert_audio(audio_file, source_format) {
     }
 }
 
-/** @param {Blob} audio_file @param {string} [source_format] */
-export async function compress_audio(audio_file, source_format) {
+/** @param {File} audio_file @param {string} [bitrate='64k'] @returns {Promise<{url: string, blob: Blob, duration: number}>} */
+export async function compress_audio(audio_file, bitrate = '64k') {
     if (!ffmpeg) await init()
 
-    const format = source_format || audio_file.type.split('/')[1] || 'mp3'
-    const input_file_name = `input.${format}`
     const output_file_name = 'output.webm'
 
-    await ffmpeg?.writeFile(input_file_name, await fetchFile(audio_file))
+    // @ts-ignore
+    // await ffmpeg?.mount('WORKERFS', {files: [audio_file]}, '/input')
 
-    await ffmpeg?.exec(['-i', input_file_name, '-f', 'null', '-'])
+    const input_path = `/input/${audio_file.name}`
 
-    await ffmpeg?.exec([
-        '-i',
-        input_file_name,
+    const codec_opts = [
         '-c:a',
         'libopus',
         '-b:a',
-        '64k',
+        bitrate,
         '-vbr',
         'on',
         '-compression_level',
         '10',
-        output_file_name,
-    ])
+    ]
+
+    await ffmpeg?.exec(['-i', input_path, ...codec_opts, output_file_name])
+
+    await ffmpeg?.unmount('/input')
 
     const data = await ffmpeg?.readFile(output_file_name)
 
@@ -127,6 +172,9 @@ export async function compress_audio(audio_file, source_format) {
         audio.addEventListener('loadedmetadata', () => resolve(audio.duration))
         audio.addEventListener('error', () => resolve(0))
     })
+
+    await ffmpeg?.deleteDir('/input')
+    await ffmpeg?.deleteFile(output_file_name)
 
     return {
         url,
