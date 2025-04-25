@@ -1,13 +1,13 @@
 <svelte:head>
     <title>استخراج النص من PDF والصور | أدوات نصية</title>
 </svelte:head>
-<div class="space-y-6" dir="rtl" use:handlePaste>
+<div class="space-y-6" dir="rtl">
     <RequireAPIKey api_key_type="gemini">
         <div class="space-y-5">
             <div class="space-y-3">
                 <div class="flex items-center justify-between">
                     <Label for="pdf-file" class="text-sm font-medium">ملف PDF أو صورة</Label>
-                    {#if document_file}
+                    {#if state.file}
                         <Button
                             size="sm"
                             variant="ghost"
@@ -21,13 +21,13 @@
                 </div>
 
                 <FileDropzone
-                    file={document_file}
+                    file={state.file}
                     info_text="PDF أو صورة"
                     accepted_mimes={['.pdf', '.png', '.jpg', '.jpeg', '.webp', '.gif', '.tiff']}
                     handle_files={files => process_selected_file(files)}
                 >
                     <svelte:fragment slot="file-icon">
-                        {#if document_file && document_file.type.includes('image')}
+                        {#if state.file && state.file.type.includes('image')}
                             <Image class="text-primary h-6 w-6" />
                         {:else}
                             <FileText class="text-primary h-6 w-6" />
@@ -41,20 +41,19 @@
                 </div>
             </div>
 
-            <div class="space-y-2">
-                <div class="flex items-center justify-between">
-                    <Label class="text-sm font-medium">نطاق الصفحات (اختياري)</Label>
-                    <div class="flex items-center gap-2">
-                        <span class="text-muted-foreground text-xs"
-                            >تركه فارغًا لاستخراج كل الصفحات</span
-                        >
-                    </div>
-                </div>
-                <Input placeholder="مثال: 1-3,5,7-9" bind:value={page_range} />
-                <p class="text-muted-foreground mt-1.5 text-xs">
-                    أدخل نطاقات مفصولة بفواصل، مثل: 1-3,5,7-9
-                </p>
-            </div>
+            <LabeledInput
+                label="نطاق الصفحات (اختياري)"
+                inputId="page-range"
+                placeholder="مثال: 1-3,5,7-9"
+                bind:value={state.page_range}
+                helperText="أدخل نطاقات مفصولة بفواصل، مثل: 1-3,5,7-9"
+            >
+                <svelte:fragment slot="action">
+                    <span class="text-muted-foreground text-xs"
+                        >تركه فارغًا لاستخراج كل الصفحات</span
+                    >
+                </svelte:fragment>
+            </LabeledInput>
 
             <div class="space-y-2">
                 <div class="flex items-center justify-between">
@@ -63,32 +62,7 @@
                         >يمكنك تعديل الprompt من الإعدادات</span
                     >
                 </div>
-                <div class="flex flex-wrap gap-4">
-                    <div class="flex items-center gap-2">
-                        <Checkbox id="enhance-text-checkbox" bind:checked={enhance_text} />
-                        <Label
-                            for="enhance-text-checkbox"
-                            class="cursor-pointer text-sm font-normal"
-                        >
-                            تحسين النص المستخرج
-                        </Label>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <Checkbox id="fix-layout-checkbox" bind:checked={fix_layout} />
-                        <Label for="fix-layout-checkbox" class="cursor-pointer text-sm font-normal">
-                            إصلاح تنسيق النص
-                        </Label>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <Checkbox id="add-diacritics-checkbox" bind:checked={add_diacritics} />
-                        <Label
-                            for="add-diacritics-checkbox"
-                            class="cursor-pointer text-sm font-normal"
-                        >
-                            إضافة تشكيل
-                        </Label>
-                    </div>
-                </div>
+                <CheckboxGroup options={processing_options} values={state.options} />
             </div>
 
             <div class="flex items-center justify-between">
@@ -96,9 +70,9 @@
                 <Button
                     class="gap-2"
                     onclick={extract_text_from_document}
-                    disabled={!document_file || is_processing}
+                    disabled={!state.file || state.is_processing}
                 >
-                    {#if is_processing}
+                    {#if state.is_processing}
                         <Loader2 class="h-4 w-4 animate-spin" />
                         <span>جاري المعالجة...</span>
                     {:else}
@@ -108,40 +82,22 @@
                 </Button>
             </div>
 
-            {#if is_processing && !extracted_text}
-                <div class="flex flex-col items-center justify-center py-8">
-                    <div class="mb-4 text-center">
-                        <Loader2 class="text-primary mx-auto h-8 w-8 animate-spin" />
-                        <p class="text-muted-foreground mt-4">
-                            {processing_phase === 'extracting'
-                                ? 'جاري استخراج النص من الملف...'
-                                : 'جاري تحسين النص المستخرج...'}
-                        </p>
-                        {#if total_pages > 0 && processing_phase === 'extracting'}
-                            <p class="text-muted-foreground mt-2 text-sm">
-                                تمت معالجة {processed_pages} من {pages_to_process.length}
-                                صفحة
-                            </p>
-                        {:else if processing_phase === 'enhancing' && total_chunks > 0}
-                            <p class="text-muted-foreground mt-2 text-sm">
-                                تمت معالجة {processed_chunks} من {total_chunks} مقطع نصي
-                            </p>
-                        {/if}
-                    </div>
-                    {#if (total_pages > 0 && processing_phase === 'extracting') || (total_chunks > 0 && processing_phase === 'enhancing')}
-                        <div class="bg-muted h-2 w-full max-w-md overflow-hidden rounded-full">
-                            <div
-                                class="bg-primary h-full rounded-full transition-all duration-300"
-                                style="width: {processing_phase === 'extracting'
-                                    ? (processed_pages / pages_to_process.length) * 100
-                                    : (processed_chunks / total_chunks) * 100}%"
-                            ></div>
-                        </div>
-                    {/if}
-                </div>
-            {/if}
-
-            {#if extracted_text}
+            {#if state.error}
+                <div class="text-destructive py-4 text-center">{state.error}</div>
+            {:else if state.is_processing && !state.text.extracted}
+                <ProcessingProgress
+                    phase={state.phase}
+                    processed={state.phase === PHASES.EXTRACTING
+                        ? state.pdf.processed_pages
+                        : state.text.processed_chunks}
+                    total={state.phase === PHASES.EXTRACTING
+                        ? state.pdf.pages_to_process.length
+                        : state.text.total_chunks}
+                    message={state.phase === PHASES.EXTRACTING
+                        ? MESSAGES.EXTRACTING
+                        : MESSAGES.ENHANCING}
+                />
+            {:else if state.text.extracted}
                 <Card>
                     <CardHeader class="pb-2">
                         <div class="flex items-center justify-between">
@@ -154,7 +110,7 @@
                                     class="h-8 gap-1"
                                     onclick={copy_to_clipboard}
                                 >
-                                    {#if copied}
+                                    {#if state.copied}
                                         <Check class="h-3.5 w-3.5" />
                                         <span>تم النسخ</span>
                                     {:else}
@@ -169,7 +125,7 @@
                     <CardContent>
                         <div class="max-h-[400px] overflow-y-auto rounded-md border p-4">
                             <div class="font-arabic whitespace-pre-wrap" dir="auto">
-                                {extracted_text}
+                                {state.text.extracted}
                             </div>
                         </div>
                     </CardContent>
@@ -185,11 +141,12 @@ import * as pdfjs from 'pdfjs-dist'
 
 import {show_notification} from '~/App.svelte'
 import FileDropzone from '~/components/FileDropzone.svelte'
+import LabeledInput from '~/components/LabeledInput.svelte'
+import ProcessingProgress from '~/components/ProcessingProgress.svelte'
+import CheckboxGroup from '~/components/CheckboxGroup.svelte'
 import {RequireAPIKey} from '$lib/api/index.js'
 import {Button} from '$lib/components/ui/button/index.js'
 import {Card, CardContent, CardHeader, CardTitle} from '$lib/components/ui/card/index.js'
-import {Checkbox} from '$lib/components/ui/checkbox/index.js'
-import {Input} from '$lib/components/ui/input/index.js'
 import {Label} from '$lib/components/ui/label/index.js'
 import {extract_text_from_image, enhance_ocr_text} from '$lib/utils/gemini-service.js'
 
@@ -201,55 +158,90 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 ).toString()
 
 //---------------------------------------------------------------
-// State variables
+// Constants
 //---------------------------------------------------------------
 
-// File handling states
-/** @type {File | null} */
-let document_file = $state(null)
-/** @type {HTMLInputElement | null} */
-let file_input = null
-
-// Processing states
-let is_processing = $state(false)
-let processing_phase = $state('idle') // 'idle', 'extracting', 'enhancing'
-let error = $state('')
-
-// PDF processing options
-let page_range = $state('')
-let fix_layout = $state(true)
-let enhance_text = $state(true)
-let add_diacritics = $state(false)
-
-// PDF processing progress
-let total_pages = $state(0)
-let processed_pages = $state(0)
-/** @type {number[]} */
-let pages_to_process = $state([])
-
-// Text processing progress
-let processed_chunks = $state(0)
-let total_chunks = $state(0)
-
-// Result states
-let extracted_text = $state('')
-let copied = $state(false)
-
-// Constants
 const MAX_CHUNK_SIZE = 20000 // Maximum text size for a single Gemini API call
+
+const PHASES = {
+    IDLE: 'idle',
+    EXTRACTING: 'extracting',
+    ENHANCING: 'enhancing',
+}
+
+const MESSAGES = {
+    EXTRACTING: 'جاري استخراج النص من الملف...',
+    ENHANCING: 'جاري تحسين النص المستخرج...',
+    ERROR: 'حدث خطأ أثناء استخراج النص من الملف',
+}
+
+/** @typedef {{ id: string, label: string, key: string }} CheckboxOption */
+
+/** @type {CheckboxOption[]} */
+const processing_options = [
+    {id: 'enhance-text', label: 'تحسين النص المستخرج', key: 'enhance_text'},
+    {id: 'fix-layout', label: 'إصلاح تنسيق النص', key: 'fix_layout'},
+    {id: 'add-diacritics', label: 'إضافة تشكيل', key: 'add_diacritics'},
+]
+
+//---------------------------------------------------------------
+// State management
+//---------------------------------------------------------------
+
+/** @type {{
+ *   file: File | null,
+ *   is_processing: boolean,
+ *   phase: string,
+ *   error: string,
+ *   page_range: string,
+ *   options: {
+ *     enhance_text: boolean,
+ *     fix_layout: boolean,
+ *     add_diacritics: boolean
+ *   },
+ *   pdf: {
+ *     total_pages: number,
+ *     processed_pages: number,
+ *     pages_to_process: number[]
+ *   },
+ *   text: {
+ *     extracted: string,
+ *     total_chunks: number,
+ *     processed_chunks: number
+ *   },
+ *   copied: boolean
+ * }} */
+let state = $state({
+    file: null,
+    is_processing: false,
+    phase: PHASES.IDLE,
+    error: '',
+    page_range: '',
+    options: {
+        enhance_text: true,
+        fix_layout: true,
+        add_diacritics: false,
+    },
+    pdf: {
+        total_pages: 0,
+        processed_pages: 0,
+        pages_to_process: [],
+    },
+    text: {
+        extracted: '',
+        total_chunks: 0,
+        processed_chunks: 0,
+    },
+    copied: false,
+})
 
 //---------------------------------------------------------------
 // Utility functions
 //---------------------------------------------------------------
 
-/** Force a UI update by waiting for next tick */
 const tick = () => new Promise(resolve => setTimeout(resolve, 0))
 
-/**
- * @param {string} range_str
- * @param {number} total_pages
- * @returns {number[]}
- */
+/** @param {string} range_str @param {number} total_pages @returns {number[]} */
 function parse_page_range(range_str, total_pages) {
     if (!range_str.trim()) return Array.from({length: total_pages}, (_, i) => i + 1)
 
@@ -287,43 +279,37 @@ function process_selected_file(files) {
         return []
     }
 
-    document_file = file
+    state.file = file
     return files
 }
 
 function clear_document_file() {
-    document_file = null
-    total_pages = 0
-    processed_pages = 0
-    extracted_text = ''
-    pages_to_process = []
-
-    if (file_input) file_input.value = ''
+    state.file = null
+    state.pdf.total_pages = 0
+    state.pdf.processed_pages = 0
+    state.text.extracted = ''
+    state.pdf.pages_to_process = []
 }
 
 async function copy_to_clipboard() {
-    if (!extracted_text) return
+    if (!state.text.extracted) return
 
-    await navigator.clipboard.writeText(extracted_text)
-    copied = true
-    setTimeout(() => (copied = false), 2000)
+    await navigator.clipboard.writeText(state.text.extracted)
+    state.copied = true
+    setTimeout(() => (state.copied = false), 2000)
 }
 
-/** @param {string} text */
-const process_extracted_text = async text => await enhance_ocr_text(text)
+//---------------------------------------------------------------
+// Text processing functions
+//---------------------------------------------------------------
 
-/** @param {string} text */
-async function process_text_in_chunks(text) {
-    if (text.length <= MAX_CHUNK_SIZE) {
-        total_chunks = 1
-        processed_chunks = 0
-        await tick()
+/** @param {string} text @returns {Promise<string>} */
+async function process_text_chunk(text) {
+    return await enhance_ocr_text(text)
+}
 
-        processed_chunks = 1
-        await tick()
-        return process_extracted_text(text)
-    }
-
+/** @param {string} text @returns {string[]} */
+function split_text_into_chunks(text) {
     const chunks = []
     let startIndex = 0
 
@@ -344,104 +330,144 @@ async function process_text_in_chunks(text) {
         startIndex = endIndex
     }
 
-    total_chunks = chunks.length
-    processed_chunks = 0
-    await tick()
+    return chunks
+}
 
-    const processedChunks = []
-    for (const chunk of chunks) {
-        const processed = await process_extracted_text(chunk)
-        processedChunks.push(processed)
-        processed_chunks++
+/** @param {string} text @returns {Promise<string>} */
+async function process_text_in_chunks(text) {
+    if (text.length <= MAX_CHUNK_SIZE) {
+        state.text.total_chunks = 1
+        state.text.processed_chunks = 0
         await tick()
+
+        state.text.processed_chunks = 1
+        await tick()
+        return await process_text_chunk(text)
     }
 
-    return processedChunks.join('\n\n')
+    const chunks = split_text_into_chunks(text)
+    state.text.total_chunks = chunks.length
+    state.text.processed_chunks = 0
+    await tick()
+
+    const processed_chunks = []
+    let update_counter = 0
+
+    for (const chunk of chunks) {
+        const processed = await process_text_chunk(chunk)
+        processed_chunks.push(processed)
+        state.text.processed_chunks++
+
+        update_counter++
+        if (update_counter >= 3 || state.text.processed_chunks === state.text.total_chunks) {
+            await tick()
+            update_counter = 0
+        }
+    }
+
+    return processed_chunks.join('\n\n')
+}
+
+/** @param {File} file @param {string} page_range @returns {Promise<string>} */
+async function extract_text_from_pdf(file, page_range) {
+    const pdf = await pdfjs.getDocument({url: URL.createObjectURL(file)}).promise
+
+    state.pdf.total_pages = pdf.numPages
+    state.pdf.pages_to_process = parse_page_range(page_range, pdf.numPages)
+    state.pdf.processed_pages = 0
+    await tick()
+
+    let text = ''
+    let update_counter = 0
+
+    for (const page_num of state.pdf.pages_to_process) {
+        const page = await pdf.getPage(page_num)
+        const content = await page.getTextContent()
+
+        const page_text = content.items.map(item => ('str' in item ? item.str : '')).join(' ')
+
+        text += page_text + '\n\n'
+        state.pdf.processed_pages++
+
+        update_counter++
+        if (
+            update_counter >= 5 ||
+            state.pdf.processed_pages === state.pdf.pages_to_process.length
+        ) {
+            await tick()
+            update_counter = 0
+        }
+    }
+
+    return text
+}
+
+/** @param {File} file @returns {Promise<string>} */
+async function process_image_text(file) {
+    state.pdf.total_pages = 1
+    state.pdf.pages_to_process = [1]
+    state.pdf.processed_pages = 0
+    await tick()
+
+    const text = await extract_text_from_image(file)
+    state.pdf.processed_pages = 1
+    await tick()
+
+    return text
 }
 
 async function extract_text_from_document() {
-    if (!document_file) return
+    if (!state.file) return
 
-    error = ''
-    total_pages = 0
-    total_chunks = 0
-    extracted_text = ''
-    processed_pages = 0
-    is_processing = true
-    processed_chunks = 0
-    pages_to_process = []
-    processing_phase = 'extracting'
+    state.error = ''
+    state.is_processing = true
+    state.phase = PHASES.EXTRACTING
+    state.text.extracted = ''
+    state.pdf.total_pages = 0
+    state.pdf.processed_pages = 0
+    state.pdf.pages_to_process = []
+    state.text.total_chunks = 0
+    state.text.processed_chunks = 0
 
-    active_operations.update((/** @type {number} */ n) => n + 1)
+    active_operations.update(/** @type {number} */ n => n + 1)
 
     try {
-        let accumulated_text = ''
+        const raw_text = state.file.type.includes('pdf')
+            ? await extract_text_from_pdf(state.file, state.page_range)
+            : await process_image_text(state.file)
 
-        if (document_file.type.includes('pdf')) {
-            const pdf = await pdfjs.getDocument({url: URL.createObjectURL(document_file)}).promise
-
-            total_pages = pdf.numPages
-            pages_to_process = parse_page_range(page_range, total_pages)
-            processed_pages = 0
+        if (Object.values(state.options).some(Boolean)) {
+            state.phase = PHASES.ENHANCING
             await tick()
-
-            for (const page_num of pages_to_process) {
-                const page = await pdf.getPage(page_num)
-                const content = await page.getTextContent()
-
-                const page_text = content.items
-                    .map(item => ('str' in item ? item.str : ''))
-                    .join(' ')
-
-                accumulated_text += page_text + '\n\n'
-                processed_pages++
-
-                if (processed_pages % 5 === 0 || processed_pages === pages_to_process.length)
-                    await tick()
-            }
-        } else {
-            total_pages = 1
-            pages_to_process = [1]
-            processed_pages = 0
-            await tick()
-
-            accumulated_text = await extract_text_from_image(document_file)
-            processed_pages = 1
-            await tick()
-        }
-
-        if (enhance_text || fix_layout || add_diacritics) {
-            processing_phase = 'enhancing'
-            await tick()
-            extracted_text = await process_text_in_chunks(accumulated_text)
-        } else extracted_text = accumulated_text
+            state.text.extracted = await process_text_in_chunks(raw_text)
+        } else state.text.extracted = raw_text
     } catch (/** @type {unknown} */ err) {
-        error = err instanceof Error ? err.message : 'حدث خطأ أثناء استخراج النص من الملف'
-        extracted_text = ''
+        state.error = err instanceof Error ? err.message : MESSAGES.ERROR
     } finally {
-        processing_phase = 'idle'
-        is_processing = false
-        active_operations.update((/** @type {number} */ n) => n - 1)
+        state.phase = PHASES.IDLE
+        state.is_processing = false
+        active_operations.update(/** @type {number} */ n => n - 1)
     }
 }
 
-/** @param {HTMLElement} node */
-function handlePaste(node) {
+;(() => {
     /** @param {ClipboardEvent} event */
-    const pasteHandler = async event => {
+    const paste_handler = async event => {
         if (!event.clipboardData) return
 
-        const hasFiles = Array.from(event.clipboardData.items).some(item => item.kind === 'file')
+        const items = Array.from(event.clipboardData.items)
+        const has_files = items.some(item => item.kind === 'file')
 
-        if (hasFiles) {
+        if (has_files) {
             event.preventDefault()
             const files = []
 
-            for (const item of event.clipboardData.items)
+            for (const item of items) {
                 if (item.kind === 'file') {
                     const file = item.getAsFile()
                     if (file) files.push(file)
                 }
+            }
 
             if (files.length > 0) {
                 process_selected_file(files)
@@ -450,12 +476,6 @@ function handlePaste(node) {
         }
     }
 
-    node.addEventListener('paste', pasteHandler)
-
-    return {
-        destroy() {
-            node.removeEventListener('paste', pasteHandler)
-        },
-    }
-}
+    document.addEventListener('paste', paste_handler)
+})()
 </script>
