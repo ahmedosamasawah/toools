@@ -9,6 +9,7 @@ import {
     Home,
     Keyboard,
     Mic,
+    Printer,
     Radio,
     Replace,
     Split,
@@ -136,5 +137,13 @@ export const routes = [
         icon: BookOpen,
         description: 'تصفح القرآن الكريم وعرض نصوصه بخطوط مختلفة',
         component_name: 'QuraanTools',
+    },
+    {
+        id: 'quraan-print',
+        path: '/quraan-print',
+        title: 'طباعة القرآن',
+        icon: Printer,
+        description: 'طباعة القرآن الكريم',
+        component_name: 'QuraanPrint',
     },
 ]

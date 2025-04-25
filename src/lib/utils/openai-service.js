@@ -93,8 +93,8 @@ export function validate_audio_file(file) {
         'webm',
     ]
 
-    const max_size_mb = 25
-    const max_size_bytes = max_size_mb * 1024 * 1024
+    // const max_size_mb = 25
+    // const max_size_bytes = max_size_mb * 1024 * 1024
 
     if (!file) return {valid: false, message: 'لم يتم اختيار ملف'}
 
@@ -111,20 +111,16 @@ export function validate_audio_file(file) {
             message: `امتداد الملف غير مدعوم (${file_extension || 'unknown'}). الامتدادات المدعومة: ${valid_extensions.join(', ')}`,
         }
 
-    if (file.size > max_size_bytes)
-        return {
-            valid: false,
-            message: `حجم الملف كبير جدًا. الحد الأقصى هو ${max_size_mb} ميجابايت`,
-        }
+    // if (file.size > max_size_bytes)
+    //     return {
+    //         valid: false,
+    //         message: `حجم الملف كبير جدًا. الحد الأقصى هو ${max_size_mb} ميجابايت. حاول تقليل حجم الملف قبل التحميل.`,
+    //     }
 
     return {valid: true, message: ''}
 }
 
-/**
- * @param {File} file
- * @param {string} model - 'whisper-1' or 'gpt-4o'
- * @returns {{minutes: number, cost: number}}
- */
+/** @param {File} file @param {string} model @returns {{minutes: number, cost: number}} */
 export function estimate_transcription_cost(file, model = 'whisper-1') {
     const price_per_minute = model === 'gpt-4o' ? 0.015 : 0.006
 

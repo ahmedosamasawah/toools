@@ -329,7 +329,7 @@ export const import_audio_file = async (file, customName = '', options = {}) => 
 
     if (file.size > SIZE_THRESHOLD) {
         const bitrate = options.bitrate || '64k'
-        result = await compress_audio(file, bitrate)
+        result = await compress_audio(file, bitrate, false)
     } else {
         const blob = new Blob([file], {type: file.type})
         result = await convert_audio(blob, extension)

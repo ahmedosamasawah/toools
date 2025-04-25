@@ -16,9 +16,20 @@ import {derived, writable} from 'svelte/store'
  */
 export const active_operations = writable(0)
 
+/**
+ * @typedef {Object} SessionType
+ * @property {boolean} loaded
+ * @property {null} user
+ * @property {boolean} sidebar_expanded
+ * @property {string|null} last_active_route
+ */
+
+/** @type {import('svelte/store').Writable<SessionType>} */
 export const session = writable({
     loaded: false,
     user: null,
+    sidebar_expanded: false,
+    last_active_route: /** @type {string|null} */ (null),
 })
 
 export const replacer_state = writable({
@@ -39,9 +50,16 @@ replacer_state.subscribe(value => {
 })
 
 function init_session() {
-    setTimeout(() => {
-        session.update(s => ({...s, loaded: true}))
-    }, 100)
+    Promise.all([kv.get('sidebarExpanded'), kv.get('lastActiveRoute')]).then(
+        ([sidebar_expanded, last_active_route]) => {
+            session.update(s => ({
+                ...s,
+                sidebar_expanded: typeof sidebar_expanded === 'boolean' ? sidebar_expanded : false,
+                last_active_route: typeof last_active_route === 'string' ? last_active_route : null,
+                loaded: true,
+            }))
+        },
+    )
 }
 
 init_session()

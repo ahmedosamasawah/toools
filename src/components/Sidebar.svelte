@@ -129,9 +129,6 @@ $effect(() => {
             on_tab_change(sidebar_state.current_tab || '')
 })
 
-/**
- * Handle sidebar toggle based on screen size
- */
 function handle_toggle() {
     if (!is_small_screen) {
         toggle_sidebar()

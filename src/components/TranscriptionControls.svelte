@@ -13,11 +13,43 @@
                     portalProps={{}}
                     class="z-50 max-h-72 overflow-y-auto font-['Kitab']"
                 >
-                    <SelectItem value="whisper-1" label="Whisper" class="cursor-pointer text-right"
-                        >Whisper</SelectItem
+                    <SelectItem
+                        value="whisper-1"
+                        label="Whisper (OpenAI)"
+                        class="cursor-pointer text-right">Whisper (OpenAI)</SelectItem
                     >
                     <SelectItem value="gpt-4o" label="GPT-4o" class="cursor-pointer text-right"
-                        >GPT-4o (جديد)</SelectItem
+                        >GPT-4o (OpenAI)</SelectItem
+                    >
+                    <SelectItem
+                        value="whisper-large-v3"
+                        label="Whisper Large v3 (Groq)"
+                        class="cursor-pointer text-right">Whisper Large v3 (Groq)</SelectItem
+                    >
+                    <SelectItem
+                        value="whisper-large-v3-turbo"
+                        label="Whisper Large v3 Turbo (Groq)"
+                        class="cursor-pointer text-right">Whisper Large v3 Turbo (Groq)</SelectItem
+                    >
+                    <SelectItem
+                        value="distil-whisper-large-v3-en"
+                        label="Distil-Whisper English (Groq)"
+                        class="cursor-pointer text-right">Distil-Whisper English (Groq)</SelectItem
+                    >
+                    <SelectItem
+                        value="gemini-2.0-flash"
+                        label="Gemini 2.0 Flash (Google)"
+                        class="cursor-pointer text-right">Gemini 2.0 Flash (Google)</SelectItem
+                    >
+                    <SelectItem
+                        value="gemini-2.5-pro-exp-03-25"
+                        label="Gemini 2.5 Pro Exp (Google)"
+                        class="cursor-pointer text-right">Gemini 2.5 Pro Exp (Google)</SelectItem
+                    >
+                    <SelectItem
+                        value="gemini-2.5-flash-preview-04-17"
+                        label="Gemini 2.5 Flash (Google)"
+                        class="cursor-pointer text-right">Gemini 2.5 Flash (Google)</SelectItem
                     >
                 </SelectContent>
             </Select>
@@ -31,7 +63,8 @@
                 type="single"
                 value={language}
                 onValueChange={handleLanguageChange}
-                disabled={selected_model === 'gpt-4o'}
+                disabled={selected_model === 'gpt-4o' ||
+                    selected_model === 'distil-whisper-large-v3-en'}
             >
                 <SelectTrigger id="language-select" class="w-full rounded border text-right">
                     {#if language}

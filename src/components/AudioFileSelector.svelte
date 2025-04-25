@@ -88,9 +88,7 @@
  * @type {string | any[]}
  */
 export let audio_files = []
-/**
- * @type {{ minutes: number; }[]}
- */
+/** @type {{ minutes: number; }[]} */
 export let file_durations = []
 export let file_error = ''
 export let estimated_total_cost = 0

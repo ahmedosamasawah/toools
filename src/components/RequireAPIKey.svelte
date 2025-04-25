@@ -32,6 +32,8 @@
                             تحتاج إلى مفتاح Gemini API لاستخدام هذه الميزة.
                         {:else if api_key_type === 'openai'}
                             تحتاج إلى مفتاح OpenAI API لاستخدام هذه الميزة.
+                        {:else if api_key_type === 'groq'}
+                            تحتاج إلى مفتاح Groq API لاستخدام هذه الميزة.
                         {:else}
                             تحتاج إلى مفتاح Utils API لاستخدام هذه الميزة.
                         {/if}
@@ -56,13 +58,19 @@ import {has_api_key} from '$lib/utils/api-keys.js'
 
 import APIKeyDialog from './APIKeyDialog.svelte'
 
-/** @typedef {'gemini' | 'openai' | 'utils'} api_key_type */
+/** @typedef {'gemini' | 'openai' | 'utils' | 'groq'} api_key_type */
 
 /** @type {{ api_key_type?: api_key_type, children: () => any }} */
 const {api_key_type = /** @type {api_key_type} */ ('gemini'), children} = $props()
 
 let service_name = $derived(
-    api_key_type === 'gemini' ? 'Gemini' : api_key_type === 'openai' ? 'OpenAI' : 'Utils',
+    api_key_type === 'gemini'
+        ? 'Gemini'
+        : api_key_type === 'openai'
+          ? 'OpenAI'
+          : api_key_type === 'groq'
+            ? 'Groq'
+            : 'Utils',
 )
 
 let show_dialog = $state(false)

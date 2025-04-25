@@ -64,6 +64,19 @@
                             إعداد المفتاح
                         </Button>
                     </div>
+                    <div class="flex items-center justify-between rounded-lg border p-4">
+                        <div class="space-y-1">
+                            <h3 class="font-medium">Groq API</h3>
+                            <p class="text-muted-foreground text-sm">مطلوب لتحويل الصوت إلى نص</p>
+                        </div>
+                        <Button
+                            variant="outline"
+                            onclick={() => (show_groq_dialog = true)}
+                            class="cursor-pointer"
+                        >
+                            إعداد المفتاح
+                        </Button>
+                    </div>
                 </div>
             </TabsContent>
 
@@ -128,6 +141,24 @@
     </Dialog.Root>
 {/if}
 
+{#if show_groq_dialog}
+    <Dialog.Root open={show_groq_dialog} onOpenChange={set_groq_dialog}>
+        <Dialog.Content>
+            <Dialog.Header>
+                <Dialog.Title>إعداد مفتاح Groq API</Dialog.Title>
+                <Dialog.Description
+                    >تحتاج إلى مفتاح Groq API لاستخدام هذه الميزة.</Dialog.Description
+                >
+            </Dialog.Header>
+            <APIKeyDialog
+                api_key_type="groq"
+                on_save={handle_save_key}
+                on_cancel={() => set_groq_dialog(false)}
+            />
+        </Dialog.Content>
+    </Dialog.Root>
+{/if}
+
 <script>
 import {Settings} from '@lucide/svelte'
 
@@ -142,31 +173,24 @@ let dialog_open = $state(false)
 let show_gemini_dialog = $state(false)
 let show_openai_dialog = $state(false)
 let show_utils_dialog = $state(false)
+let show_groq_dialog = $state(false)
 
-/**
- * @param {boolean} is_open
- */
-function set_gemini_dialog(is_open) {
-    show_gemini_dialog = is_open
-}
+/** @param {boolean} is_open */
+const set_gemini_dialog = is_open => (show_gemini_dialog = is_open)
 
-/**
- * @param {boolean} is_open
- */
-function set_openai_dialog(is_open) {
-    show_openai_dialog = is_open
-}
+/** @param {boolean} is_open */
+const set_openai_dialog = is_open => (show_openai_dialog = is_open)
 
-/**
- * @param {boolean} is_open
- */
-function set_utils_dialog(is_open) {
-    show_utils_dialog = is_open
-}
+/** @param {boolean} is_open */
+const set_utils_dialog = is_open => (show_utils_dialog = is_open)
+
+/** @param {boolean} is_open */
+const set_groq_dialog = is_open => (show_groq_dialog = is_open)
 
 async function handle_save_key() {
     show_gemini_dialog = false
     show_openai_dialog = false
     show_utils_dialog = false
+    show_groq_dialog = false
 }
 </script>

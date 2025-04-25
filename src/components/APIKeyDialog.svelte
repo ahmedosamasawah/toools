@@ -6,7 +6,9 @@
                     ? 'Gemini AI'
                     : api_key_type === 'openai'
                       ? 'OpenAI'
-                      : 'Utils'}</Label
+                      : api_key_type === 'groq'
+                        ? 'Groq'
+                        : 'Utils'}</Label
             >
         </Badge>
     </div>
@@ -55,6 +57,8 @@
                         <GeminiKeyGuide />
                     {:else if api_key_type === 'openai'}
                         <OpenAIKeyGuide />
+                    {:else if api_key_type === 'groq'}
+                        <GroqKeyGuide />
                     {:else}
                         <UtilsKeyGuide />
                     {/if}
@@ -99,12 +103,11 @@ import {Label} from '$lib/components/ui/label/index.js'
 import {get_api_key, save_api_key} from '$lib/utils/api-keys.js'
 
 import GeminiKeyGuide from './GeminiKeyGuide.svelte'
+import GroqKeyGuide from './GroqKeyGuide.svelte'
 import OpenAIKeyGuide from './OpenAIKeyGuide.svelte'
 import UtilsKeyGuide from './UtilsKeyGuide.svelte'
 
-/**
- * @typedef {'gemini' | 'openai' | 'utils'} api_key_type
- */
+/** @typedef {'gemini' | 'openai' | 'utils' | 'groq'} api_key_type */
 
 const {
     on_save = /** @type {() => void} */ (() => {}),
@@ -122,9 +125,11 @@ let helper_text = $derived(
     initial_helper_text ||
         (api_key_type === 'gemini'
             ? 'احصل على مفتاح Gemini API من Google AI Studio'
-            : api_key_type === 'openai'
-              ? 'احصل على مفتاح OpenAI API من لوحة تحكم OpenAI'
-              : 'احصل على مفتاح Utils API عبر صفحة الاتصال'),
+            : api_key_type === 'groq'
+              ? 'احصل على مفتاح Groq API من Groq Dashboard'
+              : api_key_type === 'openai'
+                ? 'احصل على مفتاح OpenAI API من لوحة تحكم OpenAI'
+                : 'احصل على مفتاح Utils API عبر صفحة الاتصال'),
 )
 
 async function initializeKeys() {
@@ -155,6 +160,11 @@ async function saveKey() {
 
     if (api_key_type === 'utils' && temp_api_key.trim().length < 10) {
         error_message = 'يجب أن يحتوي مفتاح Utils API على 10 أحرف على الأقل'
+        return
+    }
+
+    if (api_key_type === 'groq' && !temp_api_key.trim().startsWith('gsk_')) {
+        error_message = 'يجب أن يبدأ مفتاح Groq API بـ "gsk_"'
         return
     }
 

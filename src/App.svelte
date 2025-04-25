@@ -2,7 +2,7 @@
     <div class="bg-background flex h-screen">
         <Sidebar
             current_tab={route.path.substring(1) || ''}
-            is_expanded={sidebar_expanded}
+            is_expanded={$session.sidebar_expanded}
             on_tab_change={handle_tab_change}
             toggle_sidebar={handle_sidebar_toggle}
         />
@@ -101,11 +101,9 @@ session.subscribe($session => {
     if (!window.router_initialized && $session.loaded) {
         setTimeout(() => {
             router.listen()
-            kv.get(LAST_ACTIVE_ROUTE_KEY).then(storedRoute => {
-                if (storedRoute && storedRoute !== location.pathname) {
-                    router.route(storedRoute)
-                }
-            })
+            if ($session.last_active_route && $session.last_active_route !== location.pathname) {
+                router.route($session.last_active_route)
+            }
         }, 10)
         window.router_initialized = true
     }
@@ -153,14 +151,15 @@ import Sidebar from './components/Sidebar.svelte'
 
 setContext('router', router)
 
-let sidebar_expanded = $state(false)
-const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
-sidebar_expanded = isMobile ? false : true
-
 /** @param {string} tab */
 const handle_tab_change = tab => router.route('/' + tab)
 
-const handle_sidebar_toggle = () => (sidebar_expanded = !sidebar_expanded)
+const handle_sidebar_toggle = () => {
+    session.update(s => {
+        kv.set('sidebarExpanded', !s.sidebar_expanded)
+        return {...s, sidebar_expanded: !s.sidebar_expanded}
+    })
+}
 </script>
 
 <style>

@@ -134,7 +134,11 @@ const prompt_descriptions = {
 }
 
 /** @type {Record<string, string>} */
-let editable_prompts = $derived($custom_prompts ? {...$custom_prompts} : {})
+let editable_prompts = $state({})
+
+$effect(() => {
+    if ($custom_prompts) editable_prompts = {...$custom_prompts}
+})
 
 /** @param {string} prompt_type */
 async function save_prompt(prompt_type) {

@@ -136,14 +136,19 @@ export async function convert_audio(audio_file, source_format) {
     }
 }
 
-/** @param {File} audio_file @param {string} [bitrate='64k'] @returns {Promise<{url: string, blob: Blob, duration: number}>} */
-export async function compress_audio(audio_file, bitrate = '64k') {
+/** @param {File} audio_file @param {string} [bitrate='64k'] @param {boolean} [mount=false] @returns {Promise<{url: string, blob: Blob, duration: number}>} */
+export async function compress_audio(audio_file, bitrate = '64k', mount = true) {
     if (!ffmpeg) await init()
 
     const output_file_name = 'output.webm'
 
-    // @ts-ignore
-    // await ffmpeg?.mount('WORKERFS', {files: [audio_file]}, '/input')
+    ffmpeg?.on('log', ({message}) => console.log(message))
+
+    if (mount) {
+        await ffmpeg?.createDir('/input')
+        // @ts-ignore
+        await ffmpeg?.mount('WORKERFS', {files: [audio_file]}, '/input')
+    }
 
     const input_path = `/input/${audio_file.name}`
 
@@ -160,8 +165,6 @@ export async function compress_audio(audio_file, bitrate = '64k') {
 
     await ffmpeg?.exec(['-i', input_path, ...codec_opts, output_file_name])
 
-    await ffmpeg?.unmount('/input')
-
     const data = await ffmpeg?.readFile(output_file_name)
 
     const blob = new Blob([data ?? ''], {type: 'audio/webm'})
@@ -173,6 +176,7 @@ export async function compress_audio(audio_file, bitrate = '64k') {
         audio.addEventListener('error', () => resolve(0))
     })
 
+    await ffmpeg?.unmount('/input')
     await ffmpeg?.deleteDir('/input')
     await ffmpeg?.deleteFile(output_file_name)
 
