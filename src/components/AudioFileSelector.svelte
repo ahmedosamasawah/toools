@@ -78,8 +78,14 @@
         </div>
     {/if}
 
-    <Button variant="outline" size="sm" class="w-fit self-end" onclick={paste_clipboard_audio}>
-        📋 لصق رابط التسجيل
+    <Button
+        variant="outline"
+        size="sm"
+        class="w-fit gap-1 self-center"
+        onclick={paste_clipboard_audio}
+    >
+        <Clipboard class="h-3.5 w-3.5" />
+        <span>لصق من الحافظة</span>
     </Button>
 </div>
 
@@ -102,5 +108,6 @@ import {FileAudio, Music, X} from '@lucide/svelte'
 
 import FileDropzone from '~/components/FileDropzone.svelte'
 import {Button} from '$lib/components/ui/button/index.js'
+import {Clipboard} from '@lucide/svelte'
 import {Label} from '$lib/components/ui/label/index.js'
 </script>

@@ -63,7 +63,7 @@ export const routes = [
         path: '/pdf-ocr',
         title: 'استخراج PDF',
         icon: FileSearch,
-        description: 'استخراج النصوص من ملفات PDF والتعرف الضوئي على الحروف',
+        description: 'استخراج النصوص من ملفات PDF والصور والتعرف الضوئي على الحروف',
         component_name: 'PDFOcr',
     },
     {

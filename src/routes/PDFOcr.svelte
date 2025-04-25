@@ -1,18 +1,18 @@
 <svelte:head>
-    <title>استخراج النص من PDF | أدوات نصية</title>
+    <title>استخراج النص من PDF والصور | أدوات نصية</title>
 </svelte:head>
-<div class="space-y-6" dir="rtl">
+<div class="space-y-6" dir="rtl" use:handlePaste>
     <RequireAPIKey api_key_type="gemini">
         <div class="space-y-5">
             <div class="space-y-3">
                 <div class="flex items-center justify-between">
-                    <Label for="pdf-file" class="text-sm font-medium">ملف PDF</Label>
-                    {#if pdf_file}
+                    <Label for="pdf-file" class="text-sm font-medium">ملف PDF أو صورة</Label>
+                    {#if document_file}
                         <Button
                             size="sm"
                             variant="ghost"
                             class="h-8 gap-1"
-                            onclick={() => clear_pdf_file()}
+                            onclick={() => clear_document_file()}
                         >
                             <X class="h-3.5 w-3.5" />
                             <span>إزالة</span>
@@ -21,20 +21,29 @@
                 </div>
 
                 <FileDropzone
-                    file={pdf_file}
-                    info_text="PDF"
+                    file={document_file}
+                    info_text="PDF أو صورة"
                     error={file_error}
-                    accepted_mimes={['.pdf']}
+                    accepted_mimes={['.pdf', '.png', '.jpg', '.jpeg', '.webp', '.gif', '.tiff']}
                     handle_files={files => process_selected_file(files)}
                 >
                     <svelte:fragment slot="file-icon">
-                        <FileText class="text-primary h-6 w-6" />
+                        {#if document_file && document_file.type.includes('image')}
+                            <Image class="text-primary h-6 w-6" />
+                        {:else}
+                            <FileText class="text-primary h-6 w-6" />
+                        {/if}
                     </svelte:fragment>
                 </FileDropzone>
 
                 {#if file_error}
                     <p class="text-destructive text-sm">{file_error}</p>
                 {/if}
+
+                <div class="text-muted-foreground flex items-center justify-center gap-1 text-sm">
+                    <Keyboard class="h-3.5 w-3.5" />
+                    <span>للصق من الحافظة استخدم: V + ⌘ أو Ctrl + V</span>
+                </div>
             </div>
 
             <div class="space-y-2">
@@ -53,7 +62,12 @@
             </div>
 
             <div class="space-y-2">
-                <Label class="text-sm font-medium">خيارات المعالجة</Label>
+                <div class="flex items-center justify-between">
+                    <Label class="text-sm font-medium">خيارات المعالجة</Label>
+                    <span class="text-muted-foreground text-xs"
+                        >يمكنك تعديل الprompt من الإعدادات</span
+                    >
+                </div>
                 <div class="flex flex-wrap gap-4">
                     <div class="flex items-center gap-2">
                         <Checkbox id="enhance-text-checkbox" bind:checked={enhance_text} />
@@ -86,8 +100,8 @@
                 <div></div>
                 <Button
                     class="gap-2"
-                    onclick={extract_text_from_pdf}
-                    disabled={!pdf_file || is_processing}
+                    onclick={extract_text_from_document}
+                    disabled={!document_file || is_processing}
                 >
                     {#if is_processing}
                         <Loader2 class="h-4 w-4 animate-spin" />
@@ -105,7 +119,7 @@
                         <Loader2 class="text-primary mx-auto h-8 w-8 animate-spin" />
                         <p class="text-muted-foreground mt-4">
                             {processing_phase === 'extracting'
-                                ? 'جاري استخراج النص من PDF...'
+                                ? 'جاري استخراج النص من الملف...'
                                 : 'جاري تحسين النص المستخرج...'}
                         </p>
                         {#if total_pages > 0 && processing_phase === 'extracting'}
@@ -166,31 +180,23 @@
                     </CardContent>
                 </Card>
             {/if}
-
-            {#if error}
-                <Alert variant="destructive">
-                    <AlertCircle class="h-4 w-4" />
-                    <AlertTitle>خطأ</AlertTitle>
-                    <AlertDescription>{error}</AlertDescription>
-                </Alert>
-            {/if}
         </div>
     </RequireAPIKey>
 </div>
 
 <script>
-import {AlertCircle, Check, Copy, FileSearch, FileText, Loader2, X} from '@lucide/svelte'
+import {Check, Copy, FileSearch, FileText, Image, Keyboard, Loader2, X} from '@lucide/svelte'
 import * as pdfjs from 'pdfjs-dist'
 
+import {show_notification} from '~/App.svelte'
 import FileDropzone from '~/components/FileDropzone.svelte'
 import {RequireAPIKey} from '$lib/api/index.js'
-import {Alert, AlertDescription, AlertTitle} from '$lib/components/ui/alert/index.js'
 import {Button} from '$lib/components/ui/button/index.js'
 import {Card, CardContent, CardHeader, CardTitle} from '$lib/components/ui/card/index.js'
 import {Checkbox} from '$lib/components/ui/checkbox/index.js'
 import {Input} from '$lib/components/ui/input/index.js'
 import {Label} from '$lib/components/ui/label/index.js'
-import {enhance_ocr_text} from '$lib/utils/gemini-service.js'
+import {extract_text_from_image, enhance_ocr_text} from '$lib/utils/gemini-service.js'
 
 import {active_operations} from '../stores.svelte.js'
 
@@ -205,7 +211,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 
 // File handling states
 /** @type {File | null} */
-let pdf_file = $state(null)
+let document_file = $state(null)
 /** @type {HTMLInputElement | null} */
 let file_input = null
 let file_error = $state('')
@@ -285,18 +291,18 @@ function process_selected_file(files) {
     if (!files || files.length === 0) return []
 
     const file = files[0]
-    if (!file.type.includes('pdf')) {
-        file_error = 'نوع الملف غير مدعوم. يرجى اختيار ملف PDF.'
+    if (!file.type.includes('pdf') && !file.type.includes('image')) {
+        file_error = 'نوع الملف غير مدعوم. يرجى اختيار ملف PDF أو صورة.'
         return []
     }
 
-    pdf_file = file
+    document_file = file
     return files
 }
 
-function clear_pdf_file() {
+function clear_document_file() {
     file_error = ''
-    pdf_file = null
+    document_file = null
     total_pages = 0
     processed_pages = 0
     extracted_text = ''
@@ -363,8 +369,8 @@ async function process_text_in_chunks(text) {
     return processedChunks.join('\n\n')
 }
 
-async function extract_text_from_pdf() {
-    if (!pdf_file) return
+async function extract_text_from_document() {
+    if (!document_file) return
 
     error = ''
     total_pages = 0
@@ -379,25 +385,39 @@ async function extract_text_from_pdf() {
     active_operations.update((/** @type {number} */ n) => n + 1)
 
     try {
-        const pdf = await pdfjs.getDocument({url: URL.createObjectURL(pdf_file)}).promise
-
-        total_pages = pdf.numPages
-        pages_to_process = parse_page_range(page_range, total_pages)
-        processed_pages = 0
-        await tick()
-
         let accumulated_text = ''
-        for (const page_num of pages_to_process) {
-            const page = await pdf.getPage(page_num)
-            const content = await page.getTextContent()
 
-            const page_text = content.items.map(item => ('str' in item ? item.str : '')).join(' ')
+        if (document_file.type.includes('pdf')) {
+            const pdf = await pdfjs.getDocument({url: URL.createObjectURL(document_file)}).promise
 
-            accumulated_text += page_text + '\n\n'
-            processed_pages++
+            total_pages = pdf.numPages
+            pages_to_process = parse_page_range(page_range, total_pages)
+            processed_pages = 0
+            await tick()
 
-            if (processed_pages % 5 === 0 || processed_pages === pages_to_process.length)
-                await tick()
+            for (const page_num of pages_to_process) {
+                const page = await pdf.getPage(page_num)
+                const content = await page.getTextContent()
+
+                const page_text = content.items
+                    .map(item => ('str' in item ? item.str : ''))
+                    .join(' ')
+
+                accumulated_text += page_text + '\n\n'
+                processed_pages++
+
+                if (processed_pages % 5 === 0 || processed_pages === pages_to_process.length)
+                    await tick()
+            }
+        } else {
+            total_pages = 1
+            pages_to_process = [1]
+            processed_pages = 0
+            await tick()
+
+            accumulated_text = await extract_text_from_image(document_file)
+            processed_pages = 1
+            await tick()
         }
 
         if (enhance_text || fix_layout || add_diacritics) {
@@ -406,12 +426,46 @@ async function extract_text_from_pdf() {
             extracted_text = await process_text_in_chunks(accumulated_text)
         } else extracted_text = accumulated_text
     } catch (/** @type {unknown} */ err) {
-        error = err instanceof Error ? err.message : 'حدث خطأ أثناء استخراج النص من PDF'
+        error = err instanceof Error ? err.message : 'حدث خطأ أثناء استخراج النص من الملف'
         extracted_text = ''
     } finally {
         processing_phase = 'idle'
         is_processing = false
         active_operations.update((/** @type {number} */ n) => n - 1)
+    }
+}
+
+/** @param {HTMLElement} node */
+function handlePaste(node) {
+    /** @param {ClipboardEvent} event */
+    const pasteHandler = async event => {
+        if (!event.clipboardData) return
+
+        const hasFiles = Array.from(event.clipboardData.items).some(item => item.kind === 'file')
+
+        if (hasFiles) {
+            event.preventDefault()
+            const files = []
+
+            for (const item of event.clipboardData.items)
+                if (item.kind === 'file') {
+                    const file = item.getAsFile()
+                    if (file) files.push(file)
+                }
+
+            if (files.length > 0) {
+                process_selected_file(files)
+                show_notification('تم لصق الملف بنجاح', 'success')
+            }
+        }
+    }
+
+    node.addEventListener('paste', pasteHandler)
+
+    return {
+        destroy() {
+            node.removeEventListener('paste', pasteHandler)
+        },
     }
 }
 </script>

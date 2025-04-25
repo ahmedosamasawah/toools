@@ -224,3 +224,31 @@ export function validate_audio_file(file) {
     if (!valid_mime_types.includes(file.type))
         throw new Error('يجب أن يكون الملف صوتيًا من نوع متوافق مثل MP3 أو WAV أو OGG')
 }
+
+/** @param {File} image_file @returns {Promise<string>} */
+export async function extract_text_from_image(image_file) {
+    const api_key = await validateApiKey()
+    const base64_image = await fileToBase64(image_file)
+
+    return makeGeminiRequest(
+        'gemini-2.5-pro-exp-03-25:generateContent',
+        {
+            contents: [
+                {
+                    parts: [
+                        {
+                            text: 'استخرج كل النص من الصورة المعطاة. أعد النص المستخرج فقط، بدون إضافة أي ملاحظات أو وصف للصورة. إذا كان النص بالعربية، فحافظ على النص بالعربية.',
+                        },
+                        {
+                            inline_data: {
+                                mime_type: image_file.type,
+                                data: base64_image,
+                            },
+                        },
+                    ],
+                },
+            ],
+        },
+        api_key,
+    )
+}
