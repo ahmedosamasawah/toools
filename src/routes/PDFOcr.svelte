@@ -23,7 +23,6 @@
                 <FileDropzone
                     file={document_file}
                     info_text="PDF أو صورة"
-                    error={file_error}
                     accepted_mimes={['.pdf', '.png', '.jpg', '.jpeg', '.webp', '.gif', '.tiff']}
                     handle_files={files => process_selected_file(files)}
                 >
@@ -35,10 +34,6 @@
                         {/if}
                     </svelte:fragment>
                 </FileDropzone>
-
-                {#if file_error}
-                    <p class="text-destructive text-sm">{file_error}</p>
-                {/if}
 
                 <div class="text-muted-foreground flex items-center justify-center gap-1 text-sm">
                     <Keyboard class="h-3.5 w-3.5" />
@@ -214,7 +209,6 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 let document_file = $state(null)
 /** @type {HTMLInputElement | null} */
 let file_input = null
-let file_error = $state('')
 
 // Processing states
 let is_processing = $state(false)
@@ -285,14 +279,11 @@ function parse_page_range(range_str, total_pages) {
 
 /** @param {File[]} files */
 function process_selected_file(files) {
-    error = ''
-    file_error = ''
-
     if (!files || files.length === 0) return []
 
     const file = files[0]
     if (!file.type.includes('pdf') && !file.type.includes('image')) {
-        file_error = 'نوع الملف غير مدعوم. يرجى اختيار ملف PDF أو صورة.'
+        show_notification('نوع الملف غير مدعوم. يرجى اختيار ملف PDF أو صورة.', 'error')
         return []
     }
 
@@ -301,7 +292,6 @@ function process_selected_file(files) {
 }
 
 function clear_document_file() {
-    file_error = ''
     document_file = null
     total_pages = 0
     processed_pages = 0
